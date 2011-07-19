@@ -1,0 +1,38 @@
+% This ERB template takes the following variables:
+% mod: The module or class (RDoc::ClassModule) to document
+
+<% if mod.module? %>
+  \module{<%= mod.latexized_full_name %>}\label{<%= mod.latex_label %>}
+<% else %>
+  \class{<%= mod.latexized_full_name %>}\label{<%= mod.latex_label %>}
+<% end %>
+
+\subsection*{Method list}
+
+<% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>%
+  <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized_prefix_name %>}%
+<% end %>%
+
+\subsection*{Constants}
+
+\begin{tabular}{p{0.4\textwidth}p{0.2\textwidth}p{0.4\textwidth}}
+<% mod.constants.sort_by{|c| c.name}.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized_name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.comment %> \\<% end %>
+\end{tabular}
+
+<% meths = mod.method_list.select{|m| m.visibility == :public}.sort_by{|m| m.name}%>%
+<% unless meths.empty? %>%
+\subsection*{Public class methods}
+<% meths.each do |meth| %>
+  \subsubsection*{<%= meth.latexized_prefix_name %>}
+  \label{<%= meth.latex_label %>}
+  
+  \begin{verbatim}
+<%= meth.arglists %>
+  \end{verbatim}
+  
+  \noindent{}<%= meth.comment.gsub("_", "\\_").gsub("#", "\\#") %>
+  
+<% end %>
+<% end %>
+
+\subsection*{Public instance methods}

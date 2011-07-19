@@ -1,0 +1,3 @@
+= PDF Generator for RDoc (based on LaTeX)
+
+This is something *intersting*.

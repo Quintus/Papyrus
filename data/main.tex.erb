@@ -1,0 +1,126 @@
+\documentclass[a4paper,12pt]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This file is part of rdoc_pdf-latex.
+% Copyright © 2011 Pegasus Alpha
+% Released under the BSD license.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Variables used for the ERB template:
+%
+% babel_lang: Something like "ngerman", determines the babel language
+%   to load
+% doc_title:  Title of the documentation
+% intro_text: Text for the first page, the file given via RDoc's -m option
+% classes:    List of RDoc::ClassModule objects for all found classes.
+% modules:    List of RDoc::ClassModule objects for all found modules.
+% methods:    List of RDoc::MethodAttr objects for all found methods
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Packages
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[<%= babel_lang %>]{babel} %Hyphenation, etc.
+\usepackage[utf8]{inputenc} %Direct support for UTF-8 chars
+\usepackage{lmodern} %Pretty fonts
+\usepackage[T1]{fontenc}
+\usepackage{textcomp} %Useful things like \textdegree
+\usepackage[official]{eurosym} %Official \euro symbol
+\usepackage{fancyhdr} %Headers and footers
+%\usepackage{amsmath} %For math
+%\usepackage{amsfonts} %Math fonts
+%\usepackage[retainorgcmds]{IEEEtrantools} %For equations
+%\usepackage{listings} %Syntax hightlighting
+\usepackage{xcolor} %Colored text
+%\usepackage{graphicx} %Graphics via \includegraphics
+\usepackage[unicode=true,pdftex]{hyperref} %For hyperlinks
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% General information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\author{\LaTeX PDF generator for RDoc}
+\title{<%= doc_title %>}
+\date{\today}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Package-specific settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% hyperref
+\hypersetup{colorlinks=true,urlcolor=blue}
+\hypersetup{pdfauthor={\LaTeX PDF generator for RDoc},pdftitle={<%= doc_title %>}}
+
+% fancyhdr
+\pagestyle{fancy}
+\fancyhf{} %Delete everything
+\fancyhead[L]{<%= doc_title %>}
+\fancyhead[R]{\thepage}
+\setlength{\headheight}{14.5pt} %Otherwise LaTeX complains
+\renewcommand{\headrulewidth}{0.4pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% New commands and environments
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Commands for displaying the class/module headings
+% (these are headings, therefore I need the LaTeX-intern
+% macros with leading @)
+\makeatletter
+\newcommand{\module}[1]{\noindent\Large\textsc{Module \textbf{#1}}%
+\vspace{\baselineskip}\normalsize%
+\@afterindentfalse\@afterheading
+}
+\newcommand{\class}[1]{\noindent\Large\textsc{Class} \textbf{#1}%
+\vspace{\baselineskip}\normalsize%
+\@afterindentfalse\@afterheading
+}
+\makeatother
+
+%For constants
+\newcommand{\const}[2]{\noindent\textsc{#1} = \texttt{#2}\par}
+
+%Code without specification
+\newcommand{\code}[1]{\texttt{#1}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document start
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\begin{titlepage}
+  \begin{center}
+    \huge <%= doc_title %>
+    \normalsize Generated \today
+  \end{center}
+\end{titlepage}
+
+<%= intro_text %>
+
+\clearpage
+
+\section{Classes and modules overview}
+
+\begin{itemize}
+<% classes_and_modules.each do |mod| %>
+  \item \hyperref[<%= mod.latex_label %>]{<%= mod.latexized_full_name %>}
+<% end %>
+\end{itemize}
+  
+\section{Methods overview}
+
+\begin{itemize}
+<% methods.each do |meth| %>
+  \item  \hyperref[<%= meth.latex_label %>]{<%= meth.latexized_prefix_name %> (<%= meth.parent.latexized_full_name %>)}
+<% end %>
+\end{itemize}
+
+\clearpage
+
+\section{Class and module reference}
+<% classes_and_modules.each do |mod| %>
+  \input{<%= render_module(mod) %>}\clearpage %Always start a new page for a new class/module
+<% end %>
+
+\end{document}
