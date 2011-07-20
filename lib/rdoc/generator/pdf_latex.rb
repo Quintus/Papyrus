@@ -8,6 +8,7 @@ gem "rdoc"
 require "rdoc/rdoc"
 require "rdoc/generator"
 
+require_relative "../markup/to_latex"
 require_relative "../monkeypatches"
 
 $VERBOSE = true
@@ -22,6 +23,8 @@ class RDoc::Generator::PDF_LaTeX
   
   RDoc::RDoc.add_generator(self) #Tell RDoc about the new generator
 
+  DESCRIPTION = "PDF generator based on LaTeX"
+  
   #The default command to run PDFLaTeX. Overriden by the TODO commandline option.
   DEFAULT_LaTeX_COMMAND = "pdflatex".freeze
   #The default language option to pass to the LaTeX babel package.
@@ -67,6 +70,7 @@ class RDoc::Generator::PDF_LaTeX
     else #No main file -- RDoc spec says "use the first encountered file, then"
       intro_text = top_levels.first.comment
     end
+    #intro_text = RDoc::Markup::ToLaTeX.new.convert(intro_text)
 
     #Get the class and module lists, sorted alphabetically by their full names
     classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}

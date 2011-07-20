@@ -1,18 +1,25 @@
 # -*- coding: utf-8 -*-
-#This file does some monkey patches on RDOc’s classes to make it easier
+#This file does some monkey patches on RDoc’s classes to make it easier
 #to get a LaTeX-conforming represantation that is unique across the whole
 #documentation in a way that it can be used as cross-references for 
-#<tt>\label</tt> and <tt>\ref</tt> things.
+#<tt>\label</tt> and <tt>\ref</tt> things. <foo>abc</foo>.
 
 class RDoc::CodeObject
-  
+
+  LATEX_FORMATTER = RDoc::Markup::ToLaTeX.new
+
+  #Takes this CodeObject’s name and puts it into #latexize.
   def latexized_name
     latexize(name)
+  end
+
+  def latex_description
+    LATEX_FORMATTER.convert(comment)
   end
   
   private
 
-  #Completely escapes all LaTeX-special characters from a stirng.
+  #Completely escapes all LaTeX-special characters from a strirg.
   #==Parameter
   #[str] The strig to process
   #==Return value
@@ -20,7 +27,7 @@ class RDoc::CodeObject
   #==Example
   #  puts latexize("ab_ce#ff") #=> ab\_ce\#ff
   def latexize(str)
-    str.gsub("#", "\\#").gsub("_", "\\_")
+    LATEX_FORMATTER.escape(str)
   end
 
 end
@@ -100,11 +107,11 @@ class RDoc::Constant
   #and escapes all LaTeX control characters.
   def latexized_value
     if value.chars.count > LATEX_VALUE_LENGTH
-      str = value.chars.first(LATEX_VALUE_LENGTH).join + "\\ldots"
+      str = latexize(value.chars.first(LATEX_VALUE_LENGTH).join) + "\\ldots"
     else
-      str = value
+      str = latexize(value)
     end
-    latexize(str)
+    str
   end
 
   def latex_label

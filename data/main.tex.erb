@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,11pt]{article}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This file is part of rdoc_pdf-latex.
@@ -67,21 +67,33 @@
 % (these are headings, therefore I need the LaTeX-intern
 % macros with leading @)
 \makeatletter
-\newcommand{\module}[1]{\noindent\Large\textsc{Module \textbf{#1}}%
+\newcommand{\module}[1]{\par\noindent\Large\textsc{Module} \textbf{#1}%
 \vspace{\baselineskip}\normalsize%
-\@afterindentfalse\@afterheading
-}
-\newcommand{\class}[1]{\noindent\Large\textsc{Class} \textbf{#1}%
+\@afterindentfalse\@afterheading}
+\newcommand{\class}[1]{\par\noindent\Large\textsc{Class} \textbf{#1}%
 \vspace{\baselineskip}\normalsize%
-\@afterindentfalse\@afterheading
-}
+\@afterindentfalse\@afterheading}
 \makeatother
-
-%For constants
-\newcommand{\const}[2]{\noindent\textsc{#1} = \texttt{#2}\par}
 
 %Code without specification
 \newcommand{\code}[1]{\texttt{#1}}
+
+%For user’s headings
+\makeatletter
+\newcommand{\headingI}[1]{\protect\subsection*{#1}}
+
+\newcommand{\headingII}[1]{\par\noindent\large\textsc{#1}%
+\vspace{\baselineskip}\normalsize%
+\@afterindentfalse\@afterheading}
+
+\newcommand{\headingIII}[1]{\par\noindent\textsc{#1}%
+\vspace{\baselineskip}\normalsize%
+\@afterindentfalse\@afterheading}
+
+\newcommand{\headingIV}[1]{\par\noindent\testsf{#1}%
+\vspace{\baselineskip}\normalsize%
+\@afterindentfalse\@afterheading}
+\makeatother
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Document start
@@ -91,9 +103,13 @@
 
 \begin{titlepage}
   \begin{center}
-    \huge <%= doc_title %>
-    \normalsize Generated \today
+    \Huge <%= doc_title %>
   \end{center}
+  \begin{flushright}
+    \rule{4.5cm}{0.1cm}\\
+    \normalsize Generated \today\\
+    \tiny by the PDF \LaTeX{} generator for RDoc
+  \end{flushright}
 \end{titlepage}
 
 <%= intro_text %>

@@ -7,6 +7,8 @@
   \class{<%= mod.latexized_full_name %>}\label{<%= mod.latex_label %>}
 <% end %>
 
+<%= mod.latex_description %>
+
 \subsection*{Method list}
 
 <% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>%
@@ -16,7 +18,7 @@
 \subsection*{Constants}
 
 \begin{tabular}{p{0.4\textwidth}p{0.2\textwidth}p{0.4\textwidth}}
-<% mod.constants.sort_by{|c| c.name}.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized_name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.comment %> \\<% end %>
+<% mod.constants.sort_by{|c| c.name}.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized_name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.latex_description %> \\<% end %>
 \end{tabular}
 
 <% meths = mod.method_list.select{|m| m.visibility == :public}.sort_by{|m| m.name}%>%
@@ -30,7 +32,7 @@
 <%= meth.arglists %>
   \end{verbatim}
   
-  \noindent{}<%= meth.comment.gsub("_", "\\_").gsub("#", "\\#") %>
+  \noindent{}<%= meth.latex_description %>
   
 <% end %>
 <% end %>
