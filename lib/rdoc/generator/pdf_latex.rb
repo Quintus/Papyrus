@@ -11,7 +11,7 @@ require "rdoc/generator"
 require_relative "../markup/to_latex"
 require_relative "../monkeypatches"
 
-$VERBOSE = true
+$VERBOSE = true #DEBUG
 
 #This is the main class for the PDF generator for RDoc. It examines all
 #the information it gets provided from RDoc in the generate method.
@@ -45,7 +45,7 @@ class RDoc::Generator::PDF_LaTeX
   #Basename of the resulting documentation file inside the
   #temporary directory.
   MAIN_FILE_RESULT_BASENAME = "main.pdf"
-
+  
   def initialize(options)
     @options = options
     @base_dir = Pathname.pwd.expand_path
@@ -70,7 +70,7 @@ class RDoc::Generator::PDF_LaTeX
     else #No main file -- RDoc spec says "use the first encountered file, then"
       intro_text = top_levels.first.comment
     end
-    #intro_text = RDoc::Markup::ToLaTeX.new.convert(intro_text)
+    intro_text = RDoc::Markup::ToLaTeX.new.convert(intro_text)
 
     #Get the class and module lists, sorted alphabetically by their full names
     classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
@@ -80,7 +80,7 @@ class RDoc::Generator::PDF_LaTeX
     #2. Instance methods, alphabetically
     classes_and_modules = classes.concat(modules).sort_by{|mod| mod.full_name}
     methods = classes_and_modules.map{|mod| mod.method_list}.flatten.sort do |meth1, meth2|
-      if meth1.type == "class" and meth2.type == "class"
+      if meth1.type == "class" and meth2.type == "class" #RDoc uses strings, not symbols?
         meth1.name <=> meth2.name
       elsif meth1.type == "class" and meth2.type == "instance"
         -1

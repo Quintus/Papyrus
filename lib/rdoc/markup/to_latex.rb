@@ -21,6 +21,12 @@ require "rdoc/markup/inline"
 #If for any reason you want to just escape LaTeX control characters,
 #you may do so by calling the #escape method. See it’s documentation
 #for an example.
+#
+#Some parts of this class are copyrighted by the RDoc team:
+#* ::new
+#* #handle_special_TIDYLINK
+#
+#See each method’s descriptions for more details.
 class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   include RDoc::Text
 
@@ -44,26 +50,38 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #Characters that need to be escaped for LaTeX and their
   #corresponding escape sequences.
   LATEX_SPECIAL_CHARS = {
-    /\\/  => "\\textbackslash{}",
-    /\$/  => "\\$",
-    /#/   => "\\#",
-    /%/   => "\\%", 
-    /\^/  => "\\^", 
-    /&/   => "\\&",
-    /_/   => "\\_",
-    /(?<!textbackslash){/   => "\\{",
-    /(?<!textbackslash{)}/   => "\\}",
-    /~/   => "\\~",
+    /\\/    => "\\textbackslash{}",
+    /\$/    => "\\$",
+    /#/     => "\\#",
+    /%/     => "\\%",
+    /\^/    => "\\^",
+    /&/     => "\\&",
+    /_/     => "\\_",
+    /(?<!textbackslash){/  => "\\{",
+    /(?<!textbackslash{)}/ => "\\}",
+    /~/     => "\\~",
+    /©/     => "\\copyright{}",
     /LaTeX/ => "\\LaTeX{}"
   }.freeze
-
+  
   #Instanciates this formatter.
-  def initialize
-    super
-    init_tags
-  end
+  #==Parameter
+  #[markup] TODO
+  #==Return value
+  #A new instance of this class.
+  #==Example
+  #  f = RDoc::Formatter::ToLaTeX.new
+  #  puts f.convert("Some *bold* text") #=> Some \textbf{bold} text
+  #==Remarks
+  #Some lines of this method have their origin in the RDoc project. See
+  #the code for more details. Copyright by them.
+  def initialize(markup = nil)
+    super(markup)
+    #Copied from RDoc 3.8, adds link capabilities
+    @markup.add_special(/((link:|https?:|mailto:|ftp:|www\.)\S+\w)/, :HYPERLINK)
+    @markup.add_special(/(((\{.*?\})|\b\S+?)\[\S+?\.\S+?\])/, :TIDYLINK)
 
-  def init_tags
+    #Add definitions for inline markup
     add_tag(:BOLD, "\\textbf{", "}")
     add_tag(:TT, "\\texttt{", "}")
     add_tag(:EM, "\\textit{", "}")
@@ -123,9 +141,9 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     @result << "\n"
   end
 
-  #Adds \\, a line break.
+  #Termiantes a paragraph by inserting two newlines.
   def accept_blank_line(line)
-    @result << "\\\\"
+    @result << "\n\n"
   end
 
   #Adds a fitting \section, \subsection, etc. for the heading.
@@ -138,6 +156,24 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     @result << escape(raw.parts.join("\n"))
   end
 
+  #Handles raw hyperlinks.
+  def handle_special_HYPERLINK(special)
+    make_url(special.text)
+  end
+
+  #Method copied from RDoc project, copyright belongs to them. Ruby’s license.
+  #
+  #Handles hyperlinks of form {text}[url] and text[url].
+  def handle_special_TIDYLINK(special)
+    text = special.text
+
+    return text unless text =~ /\{(.*?)\}\[(.*?)\]/ or text =~ /(\S+)\[(.*?)\]/
+
+    label = $1
+    url   = $2
+    make_url url, label
+  end
+  
   #Escapes all LaTeX control characters from a string.
   #==Parameter
   #[str] The string to remove the characters from.
@@ -155,7 +191,8 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     result
   end
 
-  #Converts +item+ to LaTeX text. 
+  #Converts +item+ to LaTeX text. Difference to #escape: It
+  #does inline formatting!
   def to_latex(item)
     #This method’s code has purely been guessed by looking
     #at the caller stack for RDoc::Markup::ToHtml and examining
@@ -163,7 +200,22 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     #how to write a formatter!
     tokens = @am.flow(escape(item)) #See superclass for @am
     tokens.map!{|t| t.kind_of?(String) ? t.gsub("_", "\\_") : t} #HACK: RDoc removes the backslashes before the underscores!!
-    convert_flow(tokens) #See superclass for @am
+    convert_flow(tokens)
+  end
+
+  private
+
+  #Turns +text+ and +url+ into a LaTeX (hyperref) link via \href.
+  #If URL doesn’t start with a protocol definition (e.g. <tt>ftp://</tt>),
+  #prepend <tt>http://</tt>. If +text+ is nil, the link is displayed
+  #raw (but the protocol still is prepended if necessary).
+  def make_url(url, text = nil)
+    url = "http://#{url}" unless url =~ /^.*?:/
+    if text
+      "\\href{#{url}}{#{text}}"
+    else
+      "\\url{#{url}}"
+    end
   end
   
 end
