@@ -1,40 +1,49 @@
 % This ERB template takes the following variables:
 % mod: The module or class (RDoc::ClassModule) to document
-
-<% if mod.module? %>
+%
+%<% if mod.module? %>
   \module{<%= mod.latexized_full_name %>}\label{<%= mod.latex_label %>}
-<% else %>
+%<% else %>
   \class{<%= mod.latexized_full_name %>}\label{<%= mod.latex_label %>}
-<% end %>
+%<% end %>
 
 <%= mod.latex_description %>
 
-\subsection*{Method list}
+\subsection{Method list}
 
-<% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>%
-  <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized_prefix_name %>}%
-<% end %>%
+%<% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>
+  <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized_prefix_name %>}
+%<% end %>
 
-\subsection*{Constants}
-
-\begin{tabular}{p{0.4\textwidth}p{0.2\textwidth}p{0.4\textwidth}}
-<% mod.constants.sort_by{|c| c.name}.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized_name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.latex_description %> \\<% end %>
-\end{tabular}
-
-<% meths = mod.method_list.select{|m| m.visibility == :public}.sort_by{|m| m.name}%>%
-<% unless meths.empty? %>%
-\subsection*{Public class methods}
-<% meths.each do |meth| %>
-  \subsubsection*{<%= meth.latexized_prefix_name %>}
-  \label{<%= meth.latex_label %>}
+%<% consts = mod.constants.sort_by{|c| c.name} %>
+%<% unless consts.empty? %>
+  \subsection{Constants}
   
-  \begin{verbatim}
+  \begin{tabular}{p{0.4\textwidth}p{0.2\textwidth}p{0.4\textwidth}}
+<% consts.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized_name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.latex_description %> \\<% end %>
+  \end{tabular}
+%<% end %>
+
+%<% [["Public class methods", true, :public],
+   ["Protected class methods", true, :protected],
+   ["Private class methods", true, :private],
+   ["Public instance methods", false, :public],
+   ["Protected instance methods", false, :protected],
+   ["Private instance methods", false, :private]].each do |caption, is_singleton, visibility| %>
+% <% meths = mod.method_list.select{|m|m.singleton == is_singleton && m.visibility == visibility}.sort_by{|m| m.name}%>
+%
+% <% unless meths.empty? %>
+    \subsection{<%= caption %>}
+%   <% meths.each do |meth| %>
+      \subsubsection{<%= meth.latexized_prefix_name %>}
+      \label{<%= meth.latex_label %>}
+      
+      \begin{verbatim}
 <%= meth.arglists %>
-  \end{verbatim}
+      \end{verbatim}
   
-  \noindent{}<%= meth.latex_description %>
+      \noindent{}<%= meth.latex_description %>
   
-<% end %>
-<% end %>
-
-\subsection*{Public instance methods}
+%   <% end %>
+% <% end %>
+%<% end %>

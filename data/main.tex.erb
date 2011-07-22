@@ -33,6 +33,7 @@
 %\usepackage{listings} %Syntax hightlighting
 \usepackage{xcolor} %Colored text
 %\usepackage{graphicx} %Graphics via \includegraphics
+%\usepackage{titlesec} %Easily define new heading styles
 \usepackage[unicode=true,pdftex]{hyperref} %For hyperlinks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -42,6 +43,9 @@
 \author{\LaTeX PDF generator for RDoc}
 \title{<%= doc_title %>}
 \date{\today}
+
+%Disable section numbering
+\setcounter{secnumdepth}{-1}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Package-specific settings
@@ -66,6 +70,13 @@
 % Commands for displaying the class/module headings
 % (these are headings, therefore I need the LaTeX-intern
 % macros with leading @)
+
+%This errors?
+%\titleclass{\module}{straight}
+%\titleformat{\module}[hang]{\normalfont\scshape\Large}{\arabic{module}}{1em}{}
+%\newcounter{module}
+%\renewcommand{\themodule}{\arabic{module}}
+
 \makeatletter
 \newcommand{\module}[1]{\par\noindent\Large\textsc{Module} \textbf{#1}%
 \vspace{\baselineskip}\normalsize%
@@ -73,13 +84,8 @@
 \newcommand{\class}[1]{\par\noindent\Large\textsc{Class} \textbf{#1}%
 \vspace{\baselineskip}\normalsize%
 \@afterindentfalse\@afterheading}
-\makeatother
-
-%Code without specification
-\newcommand{\code}[1]{\texttt{#1}}
 
 %For user’s headings
-\makeatletter
 \newcommand{\headingI}[1]{\protect\subsection*{#1}}
 
 \newcommand{\headingII}[1]{\par\noindent\large\textsc{#1}%
@@ -94,6 +100,9 @@
 \vspace{\baselineskip}\normalsize%
 \@afterindentfalse\@afterheading}
 \makeatother
+
+%Code without specification
+\newcommand{\code}[1]{\texttt{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Document start
@@ -114,6 +123,10 @@
 
 <%= intro_text %>
 
+\clearpage
+\hypersetup{linkcolor=black} %Red TOC looks absolutely awful
+\tableofcontents
+\hypersetup{linkcolor=red} %Restore original link color
 \clearpage
 
 \section{Classes and modules overview}
