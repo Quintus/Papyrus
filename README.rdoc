@@ -1,3 +1,36 @@
 = PDF Generator for RDoc (based on LaTeX)
 
-This is something *intersting*.
+This library is a plugin for Ruby’s documentation generator
+RDoc[http://rdoc.rubyforge.org]. It provides both a generator for
+outputting PDF (Portable document format) (the
+RDoc::Generator::PDF_LaTeX class) files and a formatter for
+turning the parsed RDoc markup into LaTeX code
+(RDoc::Markup::ToLaTeX).
+
+== Usage
+
+To use it from the commandline, either pass RDoc the <tt>-f</tt>
+commandline switch specifying "pdf_latex":
+
+  $ rdoc -f pdf_latex
+
+You may also set this permantently in your +RDOCOPT+ environment
+variable.
+
+The other way is to use the library from within a Ruby
+program. Require it via:
+
+  require "rdoc/generator/pdf"
+
+and then do
+
+  opts = RDoc::Options.new
+  #Specify your options...
+  opts.generator = RDoc::Generator::PDF_LaTeX
+  RDoc::RDoc.new.document(opts)
+
+== License
+
+GPLv2. More follows later. With Ruby 1.9.3, going GPLv3.
+
+Copyright © 2011 Pegasus Alpha
