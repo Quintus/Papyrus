@@ -18,5 +18,6 @@ desc "Tests the whole thing by documenting this project with the PDF-LaTeX gener
 task :smoke_test do
   ENV["RDOCOPT"] = nil
   rdoc = RDoc::RDoc.new
-  rdoc.document(%w[-f pdf_latex -m README.rdoc])
+  #TODO: How does this RDoc::Options thing work?
+  rdoc.document(%w[-f pdf_latex -m README.rdoc -x Rakefile.rb])
 end
