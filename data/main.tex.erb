@@ -20,18 +20,19 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \usepackage[<%= babel_lang %>]{babel} %Hyphenation, etc.
-\usepackage[utf8]{inputenc} %Direct support for UTF-8 chars
-\usepackage{lmodern} %Pretty fonts
-\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc} %Input encoding: UTF-8
+\usepackage[T1]{fontenc} %Output encoding: T1
+\usepackage{lmodern} %Pretty fonts for T1
 \usepackage{textcomp} %Useful things like \textdegree
 \usepackage[official]{eurosym} %Official \euro symbol
+\usepackage{lastpage} %Get a reference on the last page
 \usepackage{fancyhdr} %Headers and footers
 %\usepackage{amsmath} %For math
 %\usepackage{amsfonts} %Math fonts
 %\usepackage[retainorgcmds]{IEEEtrantools} %For equations
 %\usepackage{listings} %Syntax hightlighting
 \usepackage{xcolor} %Colored text
-%\usepackage{graphicx} %Graphics via \includegraphics
+%\usepackage{graphicx} %Graphics
 \usepackage{titlesec} %Easily define new heading styles
 \usepackage{titletoc} %For telling LaTeX where to put the new headings in the TOC
 \usepackage[unicode=true,pdftex]{hyperref} %For hyperlinks
@@ -44,28 +45,47 @@
 \title{<%= doc_title %>}
 \date{\today}
 
+%Generate TOC only till level 2
+\setcounter{tocdepth}{2}
 %Disable section numbering
 \setcounter{secnumdepth}{-2}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % New commands and environments
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: Make this a LaTeX package?
 
 %Module and Class headings
-\titleclass{\module}{straight}[\section]
-\titleformat{\module}[hang]{\Large}
-   {\themodule}{1em}{\textsc{Module}\,\bfseries}
-\titlespacing{\module}{0pt}{*1}{\baselineskip}
-\newcounter{module}
-\renewcommand\themodule{\thesection.\arabic{module}}
-%\titlecontents{module}{9em}{}{\thecontentslabel}{}{\hfill\thecontentspage}
+\makeatletter
+%This is the string that is placed in front of
+%a heading made with \classmodule. Set by the
+%\class and \module commands.
+\newcommand{\@cmidentstring}{}
 
-\titleclass{\class}{straight}[\section]
-\titleformat{\class}[hang]{\Large}
-   {\theclass}{1em}{\textsc{Class}\,\bfseries}
-\titlespacing{\class}{0pt}{*1}{\baselineskip}
-\newcounter{class}
-\renewcommand\theclass{\thesection.\arabic{class}}
+%Heading for typesetting class and module names. The word
+%preceding the actual name is contained in \@cmidentstring
+%which should be cleared after the call to \classmodule.
+\titleclass{\classmodule}{straight}[\section]
+\titleformat{\classmodule}[hang]{\Large}
+   {\themodule}{1em}{\textsc{\@cmidentstring}\,\bfseries}
+\titlespacing{\classmodule}{0pt}{*1}{\baselineskip}
+\newcounter{classmodule}
+\renewcommand\theclassmodule{\thesection.\arabic{classmodule}}
+\titlecontents{classmodule}[0pt]{}{%
+  \thecontentslabel}{}{%
+  \titlerule*[8pt]{.}\contentspage}
+
+%Heading for class names
+\newcommand{\class}[1]{\renewcommand{\@cmidentstring}{Class}%
+  \classmodule{#1}%
+  \renewcommand{\@cmidentstring}{}}
+
+%Heading for module names
+\newcommand{\module}[1]{\renewcommand{\@cmidentstring}{Module}%
+  \classmodule{#1}%
+  \renewcommand{\@cmidentstring}{}
+}
+\makeatother
 
 %\makeatletter
 %For user’s headings
@@ -122,7 +142,7 @@
 \pagestyle{fancy}
 \fancyhf{} %Delete everything
 \fancyhead[L]{<%= doc_title %>}
-\fancyhead[R]{\thepage}
+\fancyhead[R]{\thepage{} / \pageref*{LastPage}}
 \setlength{\headheight}{14.5pt} %Otherwise LaTeX complains
 \renewcommand{\headrulewidth}{0.4pt}
 
@@ -163,7 +183,12 @@
 
 \begin{itemize}
 <% methods.each do |meth| %>
-  \item  \hyperref[<%= meth.latex_label %>]{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %> (<%= meth.parent.latexized :full_name %>)}
+\item  \hyperref[%
+  <%= meth.latex_label %>%
+  ]%
+  {%
+  <%= meth.latexized(:name_prefix) + meth.latexized(:name) %> (<%= meth.parent.latexized :full_name %>)%
+  }
 <% end %>
 \end{itemize}
 
