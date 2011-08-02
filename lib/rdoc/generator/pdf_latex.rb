@@ -9,7 +9,7 @@ require "rdoc/rdoc"
 require "rdoc/generator"
 
 require_relative "../markup/to_latex"
-require_relative "../monkeypatches"
+require_relative "latex_markup"
 
 $VERBOSE = true #DEBUG
 

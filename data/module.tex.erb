@@ -2,17 +2,17 @@
 % mod: The module or class (RDoc::ClassModule) to document
 %
 %<% if mod.module? %>
-  \module{<%= mod.latexized_full_name %>}\label{<%= mod.latex_label %>}
+  \module{<%= mod.latexized :full_name %>}\label{<%= mod.latex_label %>}
 %<% else %>
-  \class{<%= mod.latexized_full_name %>}\label{<%= mod.latex_label %>}
+  \class{<%= mod.latexized :full_name %>}\label{<%= mod.latex_label %>}
 %<% end %>
 
-<%= mod.latex_description %>
+<%= mod.description %>
 
 \subsection{Method list}
 
 %<% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>
-  <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized_prefix_name %>}
+  <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
 %<% end %>
 
 %<% consts = mod.constants.sort_by{|c| c.name} %>
@@ -20,7 +20,7 @@
   \subsection{Constants}
   
   \begin{tabular}{p{0.4\textwidth}p{0.2\textwidth}p{0.4\textwidth}}
-<% consts.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized_name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.latex_description %> \\<% end %>
+<% consts.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized :name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.description %> \\<% end %>
   \end{tabular}
 %<% end %>
 
@@ -35,14 +35,14 @@
 % <% unless meths.empty? %>
     \subsection{<%= caption %>}
 %   <% meths.each do |meth| %>
-      \subsubsection{<%= meth.latexized_prefix_name %>}
+      \subsubsection{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
       \label{<%= meth.latex_label %>}
       
       \begin{verbatim}
 <%= meth.arglists %>
       \end{verbatim}
   
-      \noindent{}<%= meth.latex_description %>
+      \noindent{}<%= meth.description %>
   
 %   <% end %>
 % <% end %>

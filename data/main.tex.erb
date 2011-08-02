@@ -155,7 +155,7 @@
 
 \begin{itemize}
 <% classes_and_modules.each do |mod| %>
-  \item \hyperref[<%= mod.latex_label %>]{<%= mod.latexized_full_name %>}
+  \item \hyperref[<%= mod.latex_label %>]{<%= mod.latexized :full_name %>}
 <% end %>
 \end{itemize}
   
@@ -163,7 +163,7 @@
 
 \begin{itemize}
 <% methods.each do |meth| %>
-  \item  \hyperref[<%= meth.latex_label %>]{<%= meth.latexized_prefix_name %> (<%= meth.parent.latexized_full_name %>)}
+  \item  \hyperref[<%= meth.latex_label %>]{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %> (<%= meth.parent.latexized :full_name %>)}
 <% end %>
 \end{itemize}
 

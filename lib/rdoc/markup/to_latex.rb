@@ -55,7 +55,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     /#/     => "\\#",
     /%/     => "\\%",
     /\^/    => "\\^",
-    /&/     => "\\&",
+    /&/     => "\\\\&", #WTF? \\& in gsub doesn't do anything?! TODO: File Ruby bug when back from vaction...
     /_/     => "\\_",
     /(?<!textbackslash){/  => "\\{",
     /(?<!textbackslash{)}/ => "\\}",
