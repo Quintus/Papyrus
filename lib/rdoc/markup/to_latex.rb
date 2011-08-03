@@ -203,6 +203,8 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     result
   end
 
+  private
+
   #Converts +item+ to LaTeX text. Difference to #escape: It
   #does inline formatting!
   def to_latex(item)
@@ -214,9 +216,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     tokens.map!{|t| t.kind_of?(String) ? t.gsub("_", "\\_") : t} #HACK: RDoc removes the backslashes before the underscores!!
     convert_flow(tokens)
   end
-
-  private
-
+  
   #Turns +text+ and +url+ into a LaTeX (hyperref) link via \href.
   #If URL doesn’t start with a protocol definition (e.g. <tt>ftp://</tt>),
   #prepend <tt>http://</tt>. If +text+ is nil, the link is displayed
