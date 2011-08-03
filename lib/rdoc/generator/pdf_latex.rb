@@ -35,7 +35,7 @@ class RDoc::Generator::PDF_LaTeX
   #The main file’s ERB template.
   MAIN_TEMPLATE = ERB.new(TEMPLATE_DIR.join("main.tex.erb").read)
   #The ERB template for a single file.
-  FILE_TEMPLATE = ERB.new(TEMPLATE_DIR.join("file.tex.erb").read)
+  RDOC_FILE_TEMPLATE = ERB.new(TEMPLATE_DIR.join("rdoc_file.tex.erb").read)
   #The ERB template for a single class or module.
   MODULE_TEMPLATE = ERB.new(TEMPLATE_DIR.join("module.tex.erb").read)
 
@@ -64,13 +64,13 @@ class RDoc::Generator::PDF_LaTeX
     #Prepare all the data needed by all the templates
     doc_title = @options.title
     babel_lang = DEFAULT_BABEL_LANG #TODO: Commandline option!
-    
-    if @options.main_page #nil if not set
-      intro_text = top_levels.find{|t| t.full_name == @options.main_page}.comment
-    else #No main file -- RDoc spec says "use the first encountered file, then"
-      intro_text = top_levels.first.comment
+
+    #Get the rdoc file list and move the "main page file" to the beginning.
+    rdoc_files = top_levels.select{|t| t.name =~ /\.rdoc$/i}
+    if @options.main_page #nil if not set, no main page
+      main_index = rdoc_files.index{|t| t.full_name == @options.main_page}
+      rdoc_files.unshift(rdoc_files.slice!(main_index))
     end
-    intro_text = RDoc::Markup::ToLaTeX.new.convert(intro_text)
 
     #Get the class and module lists, sorted alphabetically by their full names
     classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
@@ -146,6 +146,15 @@ class RDoc::Generator::PDF_LaTeX
   def render_module(mod)
     filename = "#{@counter}_#{mod.name}.tex"; @counter += 1
     File.open(filename, "w"){|f| f.write(MODULE_TEMPLATE.result(binding))}
+    filename
+  end
+
+  #Renders the given RDoc::TopLevel into a TeX file and returns the
+  #relative path (relative to the temporary directory) to the file.
+  #Suitable for use with \input in the main template.
+  def render_rdoc_file(rdoc_file)
+    filename = "#{@counter}_#{rdoc_file.name}.tex"; @counter += 1
+    File.open(filename, "w"){|f| f.write(RDOC_FILE_TEMPLATE.result(binding))}
     filename
   end
   

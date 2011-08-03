@@ -1,0 +1,7 @@
+% This ERB template takes the following variables:
+% rdoc_file: The RDoc::TopLevel do document
+%
+\part{<%= rdoc_file.latexized :name %>}
+
+<%= rdoc_file.description %>
+\clearpage

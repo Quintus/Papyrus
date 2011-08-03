@@ -12,7 +12,7 @@
 \subsubsection*{Method list}
 
 %<% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>
-  <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
+  <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized :pretty_name %>}
 %<% end %>
 %
 %<% unless mod.includes.empty? %>
@@ -72,7 +72,7 @@
 % <% unless meths.empty? %>
 \subsubsection*{<%= caption %>}
 %   <% meths.each do |meth| %>
-\method{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
+\method{<%= meth.latexized :pretty_name %>}
 \label{<%= meth.latex_label %>}
 
 \begin{Verbatim}
@@ -83,7 +83,7 @@
 \marginpar{\emph{Aliases: <%= meth.aliases.map{|m| "\\hyperref[#{m.latex_label}]{#{m.name}}"}.join(", ") %>}}
 %     <% end %>
 %     <% if meth.is_alias_for %>
-\noindent \emph{Alias for \hyperref[<%= meth.latex_label %>]{<%= meth.is_alias_for.name %>}.}
+\noindent \emph{Alias for \hyperref[<%= meth.latex_label %>]{<%= meth.is_alias_for.latexized :pretty_name %>}.}
 %     <% else %>
 \noindent <%= meth.description %>
 %     <% end %>

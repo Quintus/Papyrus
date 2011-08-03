@@ -10,7 +10,7 @@
 % babel_lang: Something like "ngerman", determines the babel language
 %   to load
 % doc_title:  Title of the documentation
-% intro_text: Text for the first page, the file given via RDoc's -m option
+% rdoc_files: List of RDoc::TopLevel objects for all found files (first one will become the title file)
 % classes:    List of RDoc::ClassModule objects for all found classes.
 % modules:    List of RDoc::ClassModule objects for all found modules.
 % methods:    List of RDoc::MethodAttr objects for all found methods
@@ -26,7 +26,7 @@
 \usepackage{textcomp} %Useful things like \textdegree
 \usepackage[official]{eurosym} %Official \euro symbol
 \usepackage{lastpage} %Get a reference on the last page
-\usepackage[lmargin=3cm,rmargin=3cm]{geometry}
+\usepackage[lmargin=3cm,rmargin=3cm,bmargin=2cm]{geometry}
 \usepackage{fancyhdr} %Headers and footers
 \usepackage{fancyvrb} %Better verbatim text
 \usepackage{longtable}
@@ -74,6 +74,9 @@
 \renewcommand{\themicrosection}{\thesubsubsubsection.\arabic{microsection}}
 \titlecontents{microsection}[0pt]{}{\thecontentslabel}{}{\titlerule*[8pt]{.}\contentspage}
 
+\titleformat{\part}[hang]{\normalfont\LARGE\scshape\color{blue}}{\thepart}{1em}{}[\vspace{-3mm}\rule{0.6\textwidth}{1mm}]
+\titlespacing{\part}{-1cm}{0pt}{\baselineskip}
+
 \newcommand{\class}[2]{\subsection[#1]{{\normalfont\textsc{Class}} {#1}}\vspace{-3mm}{\footnotesize Parent: \texttt{#2}\par\vspace{\baselineskip}}}
 \newcommand{\module}[1]{\subsection[#1]{{\normalfont\textsc{Module}} {#1}}}
 \newcommand{\method}[1]{\subsubsubsection*{#1}}
@@ -97,6 +100,7 @@
 \pagestyle{fancy}
 \fancyhf{} %Delete everything
 \fancyhead[L]{<%= doc_title %>}
+\fancyhead[C]{\rightmark}
 \fancyhead[R]{\thepage{} / \pageref*{LastPage}}
 \setlength{\headheight}{14.5pt} %Otherwise LaTeX complains
 \renewcommand{\headrulewidth}{0.4pt}
@@ -118,14 +122,23 @@
   \end{flushright}
 \end{titlepage}
 
-<%= intro_text %>
+% Typeset the title page (if any) before the TOC
+%<% if (title_file = rdoc_files.shift) %>
+\input{<%= render_rdoc_file(title_file) %>}
+%<% end %>
 
-\clearpage
 \hypersetup{linkcolor=black} %Red TOC looks absolutely awful
 \tableofcontents
 \hypersetup{linkcolor=red} %Restore original link color
 \clearpage
-  
+%
+%Typeset the other RDOc files after the TOC
+%<% rdoc_files.each do |file| %>
+\input{<%= render_rdoc_file(file) %>}
+%<% end %>
+
+\part{Generated Documentation}
+
 \section{Methods overview}
 
 \begin{itemize}
@@ -134,7 +147,7 @@
   <%= meth.latex_label %>%
   ]%
   {%
-  <%= meth.latexized(:name_prefix) + meth.latexized(:name) %> (<%= meth.parent.latexized :full_name %>)%
+  <%= meth.latexized :pretty_name %> (<%= meth.parent.latexized :full_name %>)%
   }
 <% end %>
 \end{itemize}
