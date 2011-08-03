@@ -2,9 +2,9 @@
 % mod: The module or class (RDoc::ClassModule) to document
 %
 %<% if mod.module? %>
-  \module{<%= mod.latexized :full_name %>}\label{<%= mod.latex_label %>}
+\module{<%= mod.latexized :full_name %>}\label{<%= mod.latex_label %>}
 %<% else %>
-  \class{<%= mod.latexized :full_name %>}\label{<%= mod.latex_label %>}
+\class{<%= mod.latexized :full_name %>}{<%= mod.latexized :superclass %>}\label{<%= mod.latex_label %>}
 %<% end %>
 
 <%= mod.description %>
@@ -14,23 +14,51 @@
 %<% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>
   <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
 %<% end %>
+%
+%<% unless mod.includes.empty? %>
+\subsubsection*{Included Modules}
+\begin{itemize}
+%  <% mod.includes.sort_by{|i| i.name}.each do |inc| %>
+\item \texttt{<%= inc.latexized :full_name %>}
+%  <% end %>
+\end{itemize}
+%<% end %>
 
 %<% consts = mod.constants.sort_by{|c| c.name} %>
 %<% unless consts.empty? %>
 \subsubsection*{Constants}
-  
+
 \begin{longtable}{p{0.3\textwidth}|p{0.2\textwidth}|p{0.4\textwidth}}
   \bfseries Name & \bfseries Value & \bfseries Description \\
   \hline
 \endhead
-%<% consts.each do |const| %>
+%  <% consts.each do |const| %>
 \label{<%= const.latex_label %>}%
 \small{\code{<%= const.latexized :name %>}} & %
 \small{\code{<%= const.latexized_value %>}} & %
 <%= const.description %> \\
 & & \\ %Empty row for readability
-%<% end %>
+%  <%  end %>
 \end{longtable}
+%<% end %>
+
+%<% unless mod.attributes.empty? %>
+\subsubsection*{Attributes}
+\begin{description}
+%  <% mod.attributes.sort_by{|a| a.name}.each do |att| %>
+\item[\texttt{<%= att.latexized :name %>}]
+    \textsf{[<%= att.rw %>]} \label{<%= att.latex_label %>}<%= att.description %>
+%  <% end %>
+\end{description}
+%<% end %>
+
+%<% unless mod.aliases.empty? %>
+\subsubsection*{Aliases}
+\begin{itemize}
+%  <% mod.aliases.sort_by{|a| a.name}.each do |al| %>
+\item \texttt{<%= al.latexized :old_name %>} $\to$ \texttt{<%= al.latexized :new_name %>}
+%  <% end %>
+\end{itemize}
 %<% end %>
 
 %<% [["Public class methods", true, :public],
@@ -46,13 +74,19 @@
 %   <% meths.each do |meth| %>
 \method{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
 \label{<%= meth.latex_label %>}
-      
+
 \begin{Verbatim}
 <%= meth.arglists %>
 \end{Verbatim}
-  
-\noindent{}<%= meth.description %>
-  
+
+%     <% unless meth.aliases.empty? %>
+\marginpar{\emph{Aliases: <%= meth.aliases.map{|m| "\\hyperref[#{m.latex_label}]{#{m.name}}"}.join(", ") %>}}
+%     <% end %>
+%     <% if meth.is_alias_for %>
+\noindent \emph{Alias for \hyperref[<%= meth.latex_label %>]{<%= meth.is_alias_for.name %>}.}
+%     <% else %>
+\noindent <%= meth.description %>
+%     <% end %>
 %   <% end %>
 % <% end %>
 %<% end %>

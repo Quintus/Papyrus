@@ -33,7 +33,7 @@ module RDoc::Generator::LaTeX_Markup
   #[NoMethodError] You passed a +symbol+ of an undefined method.
   def latexized(symbol, *args, &block)
     if respond_to?(symbol)
-      formatter.escape(send(symbol, *args, &block)) #formatter method defined below
+      formatter.escape(send(symbol, *args, &block).to_s) #formatter method defined below
     else
       raise(NoMethodError, "Requested call to unknown method #{self.class}##{symbol} to be latexized!")
     end
@@ -82,7 +82,7 @@ end
 
 #Note that RDoc::Context::Section is special, as it doesn't inherit
 #from RDoc::CodeObject. For the rest, refer to the comment above.
-[RDoc::Context::Section, RDoc::AnyMethod, RDoc::Attr, RDoc::Alias, RDoc::Constant, RDoc::Context].each do |klass|
+[RDoc::Context::Section, RDoc::AnyMethod, RDoc::Attr, RDoc::Include, RDoc::Alias, RDoc::Constant, RDoc::Context].each do |klass|
   klass.send(:include, RDoc::Generator::LaTeX_Markup) #private method
 end
 
