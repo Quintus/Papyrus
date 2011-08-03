@@ -39,13 +39,13 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   }.freeze
 
   #LaTeX heading commands. 0 is nil as there is no zeroth heading.
-  LATEX_HEADINGS = [nil,                #Dummy, no hash needed with this
-                    "\\section{%s}",   #h1
-                    "\\subsection{%s}",  #h2
-                    "\\subsubsection{%s}", #h3
-                    "\\subsubsubsection{%s}",  #h4
-                    "\\microsection{%s}",               #No h5
-                    "\\paragraph{%s}. "].freeze        #No h6
+  LATEX_HEADINGS = [nil,                         #Dummy, no hash needed with this
+                    "\\section{%s}",             #h1
+                    "\\subsection{%s}",          #h2
+                    "\\subsubsection{%s}",       #h3
+                    "\\subsubsubsection{%s}",    #h4
+                    "\\microsection*{%s}",       #h5
+                    "\\paragraph*{%s}. "].freeze #h6
 
   #Characters that need to be escaped for LaTeX and their
   #corresponding escape sequences.

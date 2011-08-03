@@ -26,8 +26,10 @@
 \usepackage{textcomp} %Useful things like \textdegree
 \usepackage[official]{eurosym} %Official \euro symbol
 \usepackage{lastpage} %Get a reference on the last page
+\usepackage[lmargin=3cm,rmargin=3cm]{geometry}
 \usepackage{fancyhdr} %Headers and footers
-\usepackage{fancyvrb}
+\usepackage{fancyvrb} %Better verbatim text
+\usepackage{longtable}
 %\usepackage{amsmath} %For math
 %\usepackage{amsfonts} %Math fonts
 %\usepackage[retainorgcmds]{IEEEtrantools} %For equations
@@ -57,15 +59,15 @@
 % TODO: Make this a LaTeX package?
 
 \titleclass{\subsubsubsection}{straight}[\subsubsection]
-\titleformat{\subsubsubsection}[hang]{\sffamily\bfseries}{%
-  \thesubsubsubsection}{1em}{}
+\titleformat{\subsubsubsection}[hang]{\raggedleft\sffamily\bfseries}{%
+  \thesubsubsubsection}{1em}{}[\vspace{-3mm}\rule{\textwidth}{1pt}]
 \titlespacing{\subsubsubsection}{0pt}{*1}{\baselineskip}
 \newcounter{subsubsubsection}
 \renewcommand{\thesubsubsubsection}{\thesubsubsection.\arabic{subsubsubsection}}
 \titlecontents{subsubsubsection}[0pt]{}{\thecontentslabel}{}{\titlerule*[8pt]{.}\contentspage}
 
 \titleclass{\microsection}{straight}[\subsubsubsection]
-\titleformat{\microsection}[hang]{\scshape}{%
+\titleformat{\microsection}[hang]{\vspace{\baselineskip}\sffamily\small\bfseries\slshape}{%
   \themicrosection}{1em}{}
 \titlespacing{\microsection}{0pt}{*1}{\baselineskip}
 \newcounter{microsection}
@@ -74,7 +76,7 @@
 
 \newcommand{\class}[1]{\subsection[#1]{{\normalfont\textsc{Class}} {#1}}}
 \newcommand{\module}[1]{\subsection[#1]{{\normalfont\textsc{Module}} {#1}}}
-\newcommand{\method}[1]{\subsubsubsection[#1]{\hfill#1}}
+\newcommand{\method}[1]{\subsubsubsection*{#1}}
 
 %Code without specification
 \newcommand{\code}[1]{\texttt{#1}}
@@ -89,16 +91,6 @@
 % hyperref
 \hypersetup{colorlinks=true,urlcolor=blue}
 \hypersetup{pdfauthor={\LaTeX PDF generator for RDoc},pdftitle={<%= doc_title %>}}
-\makeatletter
-%Add the new heading levels we defined above to hyperref’s
-%level hierarchy
-\providecommand*{\toclevel@module}{2}
-\providecommand*{\toclevel@class}{2}
-%\renewcommand{\toclevel@subsection}{4}
-%\renewcommand{\toclevel@subsubsection}{4}
-%\renewcommand{\toclevel@paragraph}{5}
-%\renewcommand{\toclevel@subparagraph}{6}
-\makeatother
 
 % fancyhdr
 \pagestyle{fancy}
@@ -132,14 +124,6 @@
 \tableofcontents
 \hypersetup{linkcolor=red} %Restore original link color
 \clearpage
-
-\section{Classes and modules overview}
-
-\begin{itemize}
-<% classes_and_modules.each do |mod| %>
-  \item \hyperref[<%= mod.latex_label %>]{<%= mod.latexized :full_name %>}
-<% end %>
-\end{itemize}
   
 \section{Methods overview}
 
