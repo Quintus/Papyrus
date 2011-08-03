@@ -50,9 +50,24 @@ module RDoc::Generator::LaTeX_Markup
     hyperlink_all = RDoc::RDoc.current.options.hyperlink_all
     this = self.kind_of?(RDoc::Context) ? self : @parent
 
-    @formatter = RDoc::Markup::ToLaTeX.new
+    @formatter = RDoc::Markup::ToLaTeX.new(current_heading_level)
   end
   
+  #Heading depth the formatter is currently in. This is added to
+  #any heading request the processed markup mades in order to ensure
+  #that the correct LaTeX heading order is always preserved. For example,
+  #if the user orders a level 2 heading in a file (the README for instance),
+  #he gets a larger heading as if he had ordered a level 2 heading inside a
+  #method description.
+  def current_heading_level
+    case self
+    when RDoc::TopLevel then 0
+    when RDoc::ClassModule then 0 #Never-ever use level 1 headings apart from TopLevels...
+    when RDoc::MethodAttr, RDoc::Alias, RDoc::Constant, RDoc::Include then 3
+    else
+      0
+    end
+  end
 end
 
 #FIXME:

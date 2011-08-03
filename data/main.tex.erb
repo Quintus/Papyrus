@@ -27,6 +27,7 @@
 \usepackage[official]{eurosym} %Official \euro symbol
 \usepackage{lastpage} %Get a reference on the last page
 \usepackage{fancyhdr} %Headers and footers
+\usepackage{fancyvrb}
 %\usepackage{amsmath} %For math
 %\usepackage{amsfonts} %Math fonts
 %\usepackage[retainorgcmds]{IEEEtrantools} %For equations
@@ -55,67 +56,25 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO: Make this a LaTeX package?
 
-%Module and Class headings
-\makeatletter
-%This is the string that is placed in front of
-%a heading made with \classmodule. Set by the
-%\class and \module commands.
-\newcommand{\@cmidentstring}{}
+\titleclass{\subsubsubsection}{straight}[\subsubsection]
+\titleformat{\subsubsubsection}[hang]{\sffamily\bfseries}{%
+  \thesubsubsubsection}{1em}{}
+\titlespacing{\subsubsubsection}{0pt}{*1}{\baselineskip}
+\newcounter{subsubsubsection}
+\renewcommand{\thesubsubsubsection}{\thesubsubsection.\arabic{subsubsubsection}}
+\titlecontents{subsubsubsection}[0pt]{}{\thecontentslabel}{}{\titlerule*[8pt]{.}\contentspage}
 
-%Heading for typesetting class and module names. The word
-%preceding the actual name is contained in \@cmidentstring
-%which should be cleared after the call to \classmodule.
-\titleclass{\classmodule}{straight}[\section]
-\titleformat{\classmodule}[hang]{\Large}
-   {\themodule}{1em}{\textsc{\@cmidentstring}\,\bfseries}
-\titlespacing{\classmodule}{0pt}{*1}{\baselineskip}
-\newcounter{classmodule}
-\renewcommand\theclassmodule{\thesection.\arabic{classmodule}}
-\titlecontents{classmodule}[0pt]{}{%
-  \thecontentslabel}{}{%
-  \titlerule*[8pt]{.}\contentspage}
+\titleclass{\microsection}{straight}[\subsubsubsection]
+\titleformat{\microsection}[hang]{\scshape}{%
+  \themicrosection}{1em}{}
+\titlespacing{\microsection}{0pt}{*1}{\baselineskip}
+\newcounter{microsection}
+\renewcommand{\themicrosection}{\thesubsubsubsection.\arabic{microsection}}
+\titlecontents{microsection}[0pt]{}{\thecontentslabel}{}{\titlerule*[8pt]{.}\contentspage}
 
-%Heading for class names
-\newcommand{\class}[1]{\renewcommand{\@cmidentstring}{Class}%
-  \classmodule{#1}%
-  \renewcommand{\@cmidentstring}{}}
-
-%Heading for module names
-\newcommand{\module}[1]{\renewcommand{\@cmidentstring}{Module}%
-  \classmodule{#1}%
-  \renewcommand{\@cmidentstring}{}
-}
-\makeatother
-
-%\makeatletter
-%For user’s headings
-%\titleclass{\headingI}{straight}[\part]
-%\titleformat{\headingI}[hang]{\Large}{\theheadingI}{1em}{}
-%\titlespacing{\headingI}{0pt}{*1}{\baselineskip}
-%\newcounter{headingI}
-%\renewcommand{\theheadingI}{\arabic{headingI}}
-\newcommand{\headingI}[1]{\protect\subsection*{#1}}
-
-%\titleclass{\headingII}{straight}[\headingI]
-%\titleformat{\headingII}[hang]{\large\scshape}
-%  {\theheadingII}{1em}{}
-%\titlespacing{\headingII}{0pt}{*1}{\baselineskip}
-%\newcounter{headingII}
-%\renewcommand{\theheadingII}{\theheadingI.\arabic{headingII}}
-
-\makeatletter
-\newcommand{\headingII}[1]{\par\noindent\large\textsc{#1}%
-\vspace{\baselineskip}\normalsize%
-\@afterindentfalse\@afterheading}
-
-\newcommand{\headingIII}[1]{\par\noindent\textsc{#1}%
-\vspace{\baselineskip}\normalsize%
-\@afterindentfalse\@afterheading}
-
-\newcommand{\headingIV}[1]{\par\noindent\testsf{#1}%
-\vspace{\baselineskip}\normalsize%
-\@afterindentfalse\@afterheading}
-\makeatother
+\newcommand{\class}[1]{\subsection[#1]{{\normalfont\textsc{Class}} {#1}}}
+\newcommand{\module}[1]{\subsection[#1]{{\normalfont\textsc{Module}} {#1}}}
+\newcommand{\method}[1]{\subsubsubsection[#1]{\hfill#1}}
 
 %Code without specification
 \newcommand{\code}[1]{\texttt{#1}}
@@ -123,6 +82,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Package-specific settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% fancyvrb
+\fvset{fontsize=\scriptsize}
 
 % hyperref
 \hypersetup{colorlinks=true,urlcolor=blue}

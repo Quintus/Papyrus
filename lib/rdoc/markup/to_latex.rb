@@ -40,12 +40,12 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #LaTeX heading commands. 0 is nil as there is no zeroth heading.
   LATEX_HEADINGS = [nil,                #Dummy, no hash needed with this
-                    "\\headingI{%s}",   #h1
-                    "\\headingII{%s}",  #h2
-                    "\\headingIII{%s}", #h3
-                    "\\headingIV{%s}",  #h4
-                    "%s",               #No h5
-                    "%s"].freeze        #No h6
+                    "\\section{%s}",   #h1
+                    "\\subsection{%s}",  #h2
+                    "\\subsubsection{%s}", #h3
+                    "\\subsubsubsection{%s}",  #h4
+                    "\\microsection{%s}",               #No h5
+                    "\\paragraph{%s}. "].freeze        #No h6
 
   #Characters that need to be escaped for LaTeX and their
   #corresponding escape sequences.
@@ -63,10 +63,19 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     /©/     => "\\copyright{}",
     /LaTeX/ => "\\LaTeX{}"
   }.freeze
+
+  #Level relative to which headings are produced from this
+  #formater. E.g., if this is 1, and the user requests a level
+  #2 heading, he actually gets a level 3 one.
+  attr_reader :heading_level
   
   #Instanciates this formatter.
-  #==Parameter
-  #[markup] TODO
+  #==Parameters
+  #[heading_level] Minimum heading level. Useful for context-based heading;
+  #                a value of 1 indicates that all requested level 2 headings
+  #                are turned into level 3 ones; a value of 2 would turn them
+  #                into level 4 ones.
+  #[markup] Parameter expected by the superclass. TODO: What for?
   #==Return value
   #A new instance of this class.
   #==Example
@@ -75,8 +84,11 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #==Remarks
   #Some lines of this method have their origin in the RDoc project. See
   #the code for more details. Copyright by them.
-  def initialize(markup = nil)
+  def initialize(heading_level = 0, markup = nil)
     super(markup)
+    
+    @heading_level = heading_level
+    
     #Copied from RDoc 3.8, adds link capabilities
     @markup.add_special(/((link:|https?:|mailto:|ftp:|www\.)\S+\w)/, :HYPERLINK)
     @markup.add_special(/(((\{.*?\})|\b\S+?)\[\S+?\.\S+?\])/, :TIDYLINK)
@@ -108,7 +120,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Puts ver’s text between \begin{verbatim} and \end{verbatim}
   def accept_verbatim(ver)
-    @result << "\\begin{verbatim}\n" << ver.text << "\n\\end{verbatim}\n"
+    @result << "\\begin{Verbatim}\n" << ver.text << "\n\\end{Verbatim}\n"
   end
 
   #Adds a \rule. The rule’s height is <tt>rule.weight</tt> pt, the
@@ -148,7 +160,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds a fitting \section, \subsection, etc. for the heading.
   def accept_heading(head)
-    @result << sprintf(LATEX_HEADINGS[head.level], escape(head.text)) << "\n"
+    @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], escape(head.text)) << "\n"
   end
 
   #Writes the raw thing as-is into the document. 

@@ -9,7 +9,7 @@
 
 <%= mod.description %>
 
-\subsection{Method list}
+\subsubsection{Method list}
 
 %<% mod.method_list.sort_by{|m| m.name}.each_with_index do |meth, i| %>
   <%= i == 0 ? "" : "," %> \hyperref[<%= meth.latex_label %>]{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
@@ -17,11 +17,11 @@
 
 %<% consts = mod.constants.sort_by{|c| c.name} %>
 %<% unless consts.empty? %>
-  \subsection{Constants}
+\subsubsection{Constants}
   
-  \begin{tabular}{p{0.4\textwidth}p{0.2\textwidth}p{0.4\textwidth}}
+\begin{tabular*}{\textwidth}{p{0.4\textwidth}p{0.2\textwidth}p{0.4\textwidth}}
 <% consts.each do |const| %>\label{<%= const.latex_label %>}\small{\code{<%= const.latexized :name %>}} & \small{\code{<%= const.latexized_value %>}} & <%= const.description %> \\<% end %>
-  \end{tabular}
+\end{tabular*}
 %<% end %>
 
 %<% [["Public class methods", true, :public],
@@ -33,16 +33,16 @@
 % <% meths = mod.method_list.select{|m|m.singleton == is_singleton && m.visibility == visibility}.sort_by{|m| m.name}%>
 %
 % <% unless meths.empty? %>
-    \subsection{<%= caption %>}
+\subsubsection{<%= caption %>}
 %   <% meths.each do |meth| %>
-      \subsubsection{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
-      \label{<%= meth.latex_label %>}
+\method{<%= meth.latexized(:name_prefix) + meth.latexized(:name) %>}
+\label{<%= meth.latex_label %>}
       
-      \begin{verbatim}
+\begin{Verbatim}
 <%= meth.arglists %>
-      \end{verbatim}
+\end{Verbatim}
   
-      \noindent{}<%= meth.description %>
+\noindent{}<%= meth.description %>
   
 %   <% end %>
 % <% end %>
