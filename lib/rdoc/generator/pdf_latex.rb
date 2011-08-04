@@ -157,5 +157,21 @@ class RDoc::Generator::PDF_LaTeX
     File.open(filename, "w"){|f| f.write(RDOC_FILE_TEMPLATE.result(binding))}
     filename
   end
+
+  #Generates a \hyperref with the given arguments.
+  def hyperref(label, name)
+    "\\hyperref[#{label}]{#{name}}"
+  end
+
+  #Generates a \pageref with the given +label+.
+  def pageref(label)
+    "\\pageref{#{label}}"
+  end
+  
+  #Shortcut for calling #hyperref with <tt>meth.latex_label</tt> and
+  #<tt>meth.latexized(:pretty_name)</tt>.
+  def hyperref_method(meth)
+    hyperref(meth.latex_label, meth.latexized(:pretty_name))
+  end
   
 end
