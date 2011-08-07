@@ -1,15 +1,24 @@
 = PDF Generator for RDoc (based on LaTeX)
 
 This library is a plugin for Ruby’s documentation generator
-RDoc[http://rdoc.rubyforge.org]. It provides both a generator for
+RDoc[http://github.com/rdoc/rdoc]. It provides both a generator for
 outputting PDF (Portable document format) (the
 RDoc::Generator::PDF_LaTeX class) files and a formatter for
 turning the parsed RDoc markup into LaTeX code
-(RDoc::Markup::ToLaTeX).
+(RDoc::Markup::ToLaTeX; RDoc::Markup::ToLaTeX_Crossref adds
+cross-reference facilities).
+
+== Requirements
+
+* This is written in Ruby[http://ruby-lang.org], so you’ll obviously need Ruby.
+  Version 1.9.2 or greater required.
+* RDoc[http://github.com/rdoc/rdoc], the Ruby documentation tool, version 3.9 or greater.
+* The generator uses LaTeX[http://latex-project.org] to generate the PDF files
+  (pdfLaTeX, to be exact), so you’ll need this as well. LaTeX2e required.
 
 == Usage
 
-To use it from the commandline, either pass RDoc the <tt>-f</tt>
+To use it from the commandline, pass RDoc the <tt>-f</tt>
 commandline switch specifying "pdf_latex":
 
   $ rdoc -f pdf_latex
@@ -20,6 +29,7 @@ variable.
 The other way is to use the library from within a Ruby
 program. Require it via:
 
+  gem "rdoc", ">= 3.9" #Won’t work with any RDoc < 3.9
   require "rdoc/generator/pdf"
 
 and then do
@@ -29,8 +39,60 @@ and then do
   opts.generator = RDoc::Generator::PDF_LaTeX
   RDoc::RDoc.new.document(opts)
 
+In both cases you’ll find a file <tt>Documentation.pdf</tt>
+in your documentation output directory (usually <tt>doc/</tt>).
+
+=== Extra commandline options
+
+The PDF generator adds some commandline options to RDoc, namely:
+
+[<tt>--show-pages</tt>]
+  Allows you to suppress the page numbers automatically added
+  to each cross reference. If you know you won’t print your
+  documentation and your PDF viewer supports cross-references,
+  you may turn them off via <tt>--no-show-pages</tt>. Defaults
+  to true.
+[<tt>--latex-command</tt>]
+  If your pdfLaTeX’s executable for whatever reason isn’t named
+  +pdflatex+ (the default), you can set the name here.
+[<tt>--babel-lang</tt>]
+  If you write your documentation in a language other than English,
+  this option may be interesting for you. It specified the option(s)
+  passed to the +babel+ package loaded in the main generated LaTeX
+  file and as such allows things like changing hyphenation patterns.
+  Note however, that hard-coded strings like "Public class methods"
+  aren’t changed by this yet (*may* come with a later release).
+
+== Author
+
+This software was written by Marvin Gülker for the German company
+of {Pegasus Alpha}[http://pegasus-alpha.de], which disclaims all
+interest on the RDoc PDF LaTeX plugin. You can contact me at
+m-guelker ÄT pegasus-alpha DÖT de.
+
 == License
 
-GPLv2. More follows later. With Ruby 1.9.3, going GPLv3.
+RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
 
-Copyright © 2011 Pegasus Alpha
+Copyright © 2011  Pegasus Alpha
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+=== A note on the license
+
+As soon as Ruby 1.9.3 final is out, this will be licensed under GPLv3.
+Just in case you wonder why it isn’t that yet, Ruby’s license is at the
+moment not compatible with the GPLv3, but with the upcomming 1.9.3 release, 
+Ruby switches to a BSD-style license which allows this.

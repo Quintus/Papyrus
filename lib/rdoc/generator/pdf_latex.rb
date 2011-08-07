@@ -1,4 +1,24 @@
 # -*- coding: utf-8 -*-
+=begin
+This file is part of RDoc PDF LaTeX.
+
+RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
+Copyright © 2011  Pegasus Alpha
+
+RDoc PDF LaTeX is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+RDoc PDF LaTeX is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with RDoc PDF LaTeX; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+=end
 
 require "fileutils"
 require "pathname"
@@ -12,8 +32,35 @@ require_relative "pdf_latex/options"
 require_relative "../markup/to_latex_crossref"
 require_relative "latex_markup"
 
-#This is the main class for the PDF generator for RDoc. It examines all
-#the information it gets provided from RDoc in the generate method.
+#This is the main class for the PDF generator for RDoc. It takes
+#RDoc’s raw parsed data and transforms it into a single PDF file
+#backed by pdfLaTeX. If you’re interested in how this process works,
+#feel free to dig into this class’s code, but ensure you also have
+#a look on the Markup::ToLaTeX class which does the heavy work of
+#translating the markup tokens into LaTeX code. The below section
+#also has a brief overview of how the generation process works.
+#
+#== The generation process
+#
+#1. During startup, RDoc calls the ::setup_options method that adds
+#   some commandline options to RDoc (these are described in the
+#   RDoc::Generator::PDF_LaTeX::Options module).
+#2. RDoc parses the source files.
+#3. RDoc calls the #generate method and passes it all encountered
+#   files as an array of RDoc::TopLevel objects.
+#4. The #generate method examines all encountered classes, modules
+#   and methods and then starts to transform the raw data handed by
+#   RDoc into LaTeX markup by means of the formatter class
+#   RDoc::Markup::ToLaTeX_Crossref. The generated markup is written
+#   into a temporary directory "tmp" below the output directory
+#   RDoc has chosen or has been instructed to choose (via commandline),
+#   generating one LaTeX file for each class and module plus one main
+#   file "main.tex" that includes the other files as needed.
+#5. pdfLaTeX is invoked on that final main file, generating "main.pdf"
+#   in the temporary directory.
+#6. The generated PDF file is copied over to the real output directory
+#   and renamed to "Documentation.pdf".
+#7. The temporary directory is recursively deleted.
 class RDoc::Generator::PDF_LaTeX
 
   #Generic exception class for this library.
@@ -40,7 +87,13 @@ class RDoc::Generator::PDF_LaTeX
   #Basename of the resulting documentation file inside the
   #temporary directory.
   MAIN_FILE_RESULT_BASENAME = "main.pdf"
-  
+
+  #Creates a new instance of this class. Automatically called by RDoc.
+  #There shouldn’t be any need for you to call this.
+  #==Parameter
+  #[options] RDoc passes the current RDoc::Options instance here.
+  #==Return value
+  #The newly created instance.
   def initialize(options)
     @options = options
     @base_dir = Pathname.pwd.expand_path
@@ -56,6 +109,8 @@ class RDoc::Generator::PDF_LaTeX
 
   #Called by RDoc during option processing. Adds commandline
   #switches specific to this generator.
+  #==Parameter
+  #[options] The yet unparsed RDoc::Options.
   def self.setup_options(options)
     #Define the methods to get and set the options
     options.extend(RDoc::Generator::PDF_LaTeX::Options)
@@ -71,7 +126,11 @@ class RDoc::Generator::PDF_LaTeX
       options.babel_lang = val
     end
   end
-  
+
+  #Called by RDoc after parsing has happened in order to generate the output.
+  #This method takes the input of RDoc::TopLevel objects and tranforms
+  #them by means of the RDoc::Markup::ToLaTeX_Crossref class into LaTeX
+  #markup.
   def generate(top_levels)
     #Prepare all the data needed by all the templates
     doc_title = @options.title

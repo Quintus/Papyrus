@@ -1,4 +1,24 @@
 # -*- coding: utf-8 -*-
+=begin
+This file is part of RDoc PDF LaTeX.
+
+RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
+Copyright © 2011  Pegasus Alpha
+
+RDoc PDF LaTeX is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+RDoc PDF LaTeX is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with RDoc PDF LaTeX; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+=end
 
 require "rdoc/markup/formatter"
 require "rdoc/markup/inline"
@@ -22,11 +42,115 @@ require "rdoc/markup/inline"
 #you may do so by calling the #escape method. See it’s documentation
 #for an example.
 #
-#Some parts of this class are copyrighted by the RDoc team:
+#Some parts of this class are heavily inspired by RDoc’s own
+#code, namely:
 #* ::new
 #* #handle_special_TIDYLINK
 #
 #See each method’s descriptions for more details.
+#
+#==How to write a formatter
+#RDoc offers an easy to adapt visitor pattern for creating new formatters.
+#"Easy" to a certain extend, as soon as you get into inline formatting
+#RDoc’s documentation lacks some serious information. Nevertheless, I'll
+#describe the process of formatting here, even if I reiterate some of the
+#concepts the documentation for class RDoc::Markup::Formatter mentions.
+#
+#First, you have to derive your class from RDoc::Markup::Formatter and
+#then obscurely have to include the RDoc::Text module, because this one
+#is responsible for parsing inline markup.
+#
+#Assuming you already wrote a generator making use of your
+#formatter (because without writing a generator, writing
+#a formatter is a somewhat nonsense undertaking as noone
+#instanciates the class), I continue on how RDoc interacts
+#with your formatter class.
+#
+#So, somewhere in your generator you call the ::new method of
+#your formatter (preferably inside the YourGenerator#formatter
+#method, but I assume you know this as it belongs to writing
+#generators and not formatters). Ensure that this method takes
+#at least one argument called +markup+, which defaults to a +nil+
+#value! Till now I didn’t really find out what it’s for, but
+#the RDoc::Markup::Formatter::new method expects it, so we
+#should obey it. All other arguments are up to your choice,
+#just ensure that you call +super+ inside your +initialize+ method
+#with the +markup+ parameter as it’s sole argument.
+#
+#The next task for your +initialize+ is to tell RDoc how to cope
+#with the three inline formatting sequences: Bold, italic
+#and teletypd text. Call the +add_tag+ inherited from
+#the Formatter class and pass it one of the following
+#symbols along with how you want to transform the given
+#sequence:
+#
+#* <tt>:BOLD</tt>
+#* <tt>:EM</tt>
+#* <tt>:TT</tt>
+#
+#If you want to add so-called "specials" to your formatter (and you’re likely
+#to, as hyperlinks are such specials), you have to dig around in RDoc’s
+#own formatters, namely RDoc::Markup::ToHtml, and find out that there’s
+#an instance variable called @markup that allows you to do this. Call
+#it’s +add_special+ method with a regular expression that finds your special
+#and a name for it as a symbol. RDoc itself uses the following specials:
+#
+#  @markup.add_special(/((link:|https?:|mailto:|ftp:|www\.)\S+\w)/, :HYPERLINK)
+#  @markup.add_special(/(((\{.*?\})|\b\S+?)\[\S+?\.\S+?\])/, :TIDYLINK)
+#
+#If you add a special, you have to provide a <tt>handle_special_YOURSPECIAL</tt> method
+#in your formatter, where YOURSPECIAL corresponds to the symbol you previously
+#passed to the +add_special+ method. This method gets passed a RDoc::Special object, from
+#which you just need to know the +text+ method that retrieves the text your regular
+#expression matched. Apply whatever you want, and return a string RDoc will incorporate
+#into the result.
+#
+#During the formatting process RDoc calls various method on your
+#formatter, the full list can be seen in the documentation for the
+#class RDoc::Markup::Formatter. Note that *those* methods should _not_
+#return a string--in fact, RDoc ignores their return values. You are
+#expected to keep track of your formatted text, e.g. create an instance
+#variable @result in your +initialize+ method and fill it with text
+#in the methods called by RDoc. 
+#
+#When everything has been processed, RDoc calls the +end_accepting+ method
+#on your formatter instance. It’s return value is expected to be the complete
+#parsing result, so if your used a string instance variable @result as
+#I recommended above, you should return it’s value from that method.
+#
+#=== Inline formatting
+#This isn’t as hard as I explained earlier, but you have to know what
+#to do, otherwise you’ll be stuck with paragraphs being treated as
+#paragraphs as a whole, but no inline formatting happens. So, to
+#achieve this, you have to define a method that initiates the
+#inline formatting process, RDoc’s HTML formatter’s method
+#is RDoc::Markup::HTML#to_html, so you may choose a name
+#fitting that name scheme (I did for this formatter as
+#well, but the +to_latex+ method is private). You then call
+#this method inside your +accept_paragraph+ method with the
+#paragraph’s text as it’s argument. The content of the method
+#cannot be known if you didn’t dig around in RDoc’s formatter
+#sources--it’s the following:
+#
+#  convert_flow(@am.flow(paragraph_text_here))
+#
+#So, what does this do? It uses the superclass’s (undocumented) instance
+#variable @am, which is an instance of RDoc::AttributeFormatter that
+#is responsible for keeping track of which inline text attributes to
+#apply where. It has this magic method called +flow+ which takes
+#one argument: The text of the paragraph you want to format. It tokenizes
+#the paragraph into little pieces of some RDoc tokens and plain strings
+#and returns them as an array (yes, this was the inline parsing process).
+#We then take that token array and pass it directly to the +convert_flow+
+#method (inhertied from the Formatter class) which knows how to handle
+#the token sequence and comes back to your formatter instance each time
+#it wants to format something, bold or teletyped text for instance
+#(remember? You defined that with +add_tag+). If you want to format plain
+#text without any special markup as well (I had to for the LaTeX formatter,
+#because for LaTeX several characters have to be escaped even in
+#nonformatted text, e.g. the underscore) you have to provide the method
+#+convert_string+. It will get passed all strings that don’t have any
+#markup applied; it’s return value will be in the final result.
 class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   include RDoc::Text
 
@@ -88,7 +212,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #  puts f.convert("Some *bold* text") #=> Some \textbf{bold} text
   #==Remarks
   #Some lines of this method have their origin in the RDoc project. See
-  #the code for more details. Copyright by them.
+  #the code for more details.
   def initialize(heading_level = 0, markup = nil)
     super(markup)
     
@@ -184,8 +308,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     escape(str)
   end
   
-  #Method copied from RDoc project and slightly modified, 
-  #copyright belongs to them. Ruby’s license.
+  #Method copied from RDoc project and slightly modified.
   #
   #Handles hyperlinks of form {text}[url] and text[url].
   def handle_special_TIDYLINK(special)
