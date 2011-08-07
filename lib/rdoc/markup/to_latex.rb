@@ -46,7 +46,9 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
                     "\\subsubsection{%s}",       #h3
                     "\\subsubsubsection{%s}",    #h4
                     "\\microsection*{%s}",       #h5
-                    "\\paragraph*{%s}. "].freeze #h6
+                    "\\paragraph*{%s.} ",        #h6
+                    "\\subparagraph*{%s}",       #Needed??
+                    "%s", "%s", "%s", "%s", "%s", "%s"].freeze #Everything below is just ignored.
 
   #Characters that need to be escaped for LaTeX and their
   #corresponding escape sequences. Note the order if important,
