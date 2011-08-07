@@ -11,30 +11,7 @@
 
 %<% unless mod.method_list.empty? %>
 \subsubsection*{Method list}
-
-\small
-\begin{longtable}{l|l|l|l|l|l}
-  \bfseries Name & \bfseries p & \bfseries Name & \bfseries p & \bfseries Name & \bfseries p \\
-  \hline
-\endhead
-%  <% mod.method_list.sort_by{|m| m.name}.each_slice(3) do |meth1, meth2, meth3| %>
-<%= hyperref_method(meth1, false) %> & <%= pageref(meth1.latex_label) %> &
-%
-%    <% if meth2 %>
-<%= hyperref_method(meth2, false) %> & <%= pageref(meth2.latex_label) %> &
-%    <% else %>
-&&
-%    <% end %>
-%
-%    <% if meth3 %>
-<%= hyperref_method(meth3, false) %> & <%= pageref(meth3.latex_label) %> \\
-%    <% else %>
-& \\
-%    <% end %>
-
-%  <% end %>
-\end{longtable}
-\normalsize
+<%= generate_method_table(mod.method_list) %>
 %<% end %>
 
 %<% unless mod.includes.empty? %>

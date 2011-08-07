@@ -10,10 +10,8 @@
 % babel_lang: Something like "ngerman", determines the babel language
 %   to load
 % doc_title:  Title of the documentation
-% rdoc_files: List of RDoc::TopLevel objects for all found files (first one will become the title file)
-% classes:    List of RDoc::ClassModule objects for all found classes.
-% modules:    List of RDoc::ClassModule objects for all found modules.
-% methods:    List of RDoc::MethodAttr objects for all found methods
+% @rdoc_files: List of RDoc::TopLevel objects for all found files (first one will become the title file)
+% @classes_and_modules:    List of RDoc::ClassModule objects for all found classes and modules.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Packages
@@ -123,7 +121,7 @@
 \end{titlepage}
 
 % Typeset the title page (if any) before the TOC
-%<% if (title_file = rdoc_files.shift) %>
+%<% if (title_file = @rdoc_files.shift) %>
 \input{<%= render_rdoc_file(title_file) %>}
 %<% end %>
 
@@ -133,29 +131,19 @@
 \clearpage
 %
 %Typeset the other RDOc files after the TOC
-%<% rdoc_files.each do |file| %>
+%<% @rdoc_files.each do |file| %>
 \input{<%= render_rdoc_file(file) %>}
 %<% end %>
 
 \part{Generated Documentation}
 
 \section{Methods overview}
-
-\begin{itemize}
-<% methods.each do |meth| %>
-\item  \hyperref[%
-  <%= meth.latex_label %>%
-  ]%
-  {%
-  <%= meth.latexized :pretty_name %> (<%= meth.parent.latexized :full_name %>)%
-  }
-<% end %>
-\end{itemize}
+<%= generate_method_toc_table %>
 
 \clearpage
 
 \section{Class and module reference}
-<% classes_and_modules.each do |mod| %>
+<% @classes_and_modules.each do |mod| %>
   \input{<%= render_module(mod) %>}\clearpage %Always start a new page for a new class/module
 <% end %>
 

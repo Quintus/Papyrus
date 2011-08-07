@@ -78,32 +78,20 @@ class RDoc::Generator::PDF_LaTeX
     babel_lang = @options.babel_lang
 
     #Get the rdoc file list and move the "main page file" to the beginning.
-    rdoc_files = top_levels.select{|t| t.name =~ /\.rdoc$/i}
+    @rdoc_files = top_levels.select{|t| t.name =~ /\.rdoc$/i}
     if @options.main_page #nil if not set, no main page
-      main_index = rdoc_files.index{|t| t.full_name == @options.main_page}
-      rdoc_files.unshift(rdoc_files.slice!(main_index))
+      main_index = @rdoc_files.index{|t| t.full_name == @options.main_page}
+      @rdoc_files.unshift(@rdoc_files.slice!(main_index))
     end
 
     #Get the class and module lists, sorted alphabetically by their full names
-    classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
-    modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
+    @classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
+    @modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
     #Get the method list and sort it like this:
     #1. Class/module methods, alphabetically
     #2. Instance methods, alphabetically
-    classes_and_modules = classes.concat(modules).sort_by{|mod| mod.full_name}
-    methods = classes_and_modules.map{|mod| mod.method_list}.flatten.sort do |meth1, meth2|
-      if meth1.type == "class" and meth2.type == "class" #RDoc uses strings, not symbols?
-        meth1.name <=> meth2.name
-      elsif meth1.type == "class" and meth2.type == "instance"
-        -1
-      elsif meth1.type == "instance" and meth2.type == "class"
-        1
-      elsif meth1.type == "instance" and meth2.type == "instance"
-        meth1.name <=> meth2.name
-      else #Can’t be
-        raise(RuntimeError, "You proved God’s existence!")
-      end
-    end
+    @classes_and_modules = @classes.concat(@modules).sort_by{|mod| mod.full_name}
+    @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort
 
     #Start the template filling process
     temp_dir = @output_dir + "tmp"
@@ -146,7 +134,7 @@ class RDoc::Generator::PDF_LaTeX
       
       e = thread.value.exitstatus
       unless e == 0
-        raise(PDF_LaTeX_Error, "Invoking #{@latex_command} failed with exitstatus #{e}!")
+        raise(PDF_LaTeX_Error, "Invoking #{@options.latex_command} failed with exitstatus #{e}!")
       end
     end
   rescue Errno::ENOENT => e
@@ -210,6 +198,58 @@ class RDoc::Generator::PDF_LaTeX
     else
       hyperref(obj.latex_label, obj.latexized(:full_name))
     end
+  end
+
+  #Takes a list of RDoc::MethodAttr objects and turns them into a sorted
+  #LaTeX table with hyperlinks and page references.
+  def generate_method_table(methods)
+    table_str = ""
+    table_str << "\\small"
+    table_str << "\\begin{longtable}{l|l|l|l|l|l}\n"
+    table_str << "  \\bfseries Name & \\bfseries p & \\bfseries Name & \\bfseries p & \\bfseries Name & \\bfseries p \\\\\n"
+    table_str << "  \\hline\n"
+    table_str << "\\endhead\n"
+    methods.sort.each_slice(3) do |meth1, meth2, meth3|
+      table_str << hyperref_method(meth1, false) << " & " << pageref(meth1.latex_label) << " &\n"
+
+      if meth2
+        table_str << hyperref_method(meth2, false) << " & " << pageref(meth2.latex_label) << " &\n"
+      else
+        table_str << "&&\n"
+      end
+
+      if meth3
+        table_str << hyperref_method(meth3, false) << " & " << pageref(meth3.latex_label) << " \\\\\n"
+      else
+        table_str << "&\\\\\n"
+      end
+    end
+    
+    table_str << "\n\\end{longtable}\n"
+    table_str << "\\normalsize\n"
+    
+    table_str
+  end
+
+  #Generates the method overview table after the TOC for +methods+, which should
+  #be all methods of all classes and modules.
+  def generate_method_toc_table
+    table_str = ""
+    table_str << "\\small"
+    table_str << "\\begin{longtable}{l|l}\n"
+    table_str << "  \\bfseries Name & \\bfseries p \\\\\n"
+    table_str << "  \\hline\n"
+    table_str << "\\endhead\n"
+    @methods.each do |meth|
+      table_str << hyperref_method(meth, false) << " (" 
+      table_str << hyperref(meth.parent.latex_label, meth.parent.latexized(:full_name), false) << ")"
+      table_str << " & " << pageref(meth.latex_label) << " \\\\\n"
+    end
+    
+    table_str << "\n\\end{longtable}\n"
+    table_str << "\\normalsize\n"
+    
+    table_str
   end
   
 end
