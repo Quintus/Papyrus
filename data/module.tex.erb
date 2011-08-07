@@ -3,8 +3,8 @@
 %
 %<% if mod.module? %>
 \module{<%= mod.latexized :full_name %>}\label{<%= mod.latex_label %>}
-%<% else %>
-\class{<%= mod.latexized :full_name %>}{<%= mod.latexized :superclass %>}\label{<%= mod.latex_label %>}
+% <% else %>
+\class{<%= mod.latexized :full_name %>}{<%= superclass_string(mod.superclass) %>}\label{<%= mod.latex_label %>}
 %<% end %>
 
 <%= mod.description %>

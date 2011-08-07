@@ -201,5 +201,15 @@ class RDoc::Generator::PDF_LaTeX
   def hyperref_method(meth, show_page = false)
     hyperref(meth.latex_label, meth.latexized(:pretty_name), show_page)
   end
+
+  #Takes either a string or a RDoc::CodeObject and returns
+  #a \hyperref to it if possible. Otherwise just returns +obj+.
+  def superclass_string(obj)
+    if obj.kind_of?(String)
+      obj
+    else
+      hyperref(obj.latex_label, obj.latexized(:full_name))
+    end
+  end
   
 end
