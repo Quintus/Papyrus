@@ -8,7 +8,7 @@ gem "rdoc"
 require "rdoc/rdoc"
 require "rdoc/generator"
 
-require_relative "../markup/to_latex"
+require_relative "../markup/to_latex_crossref"
 require_relative "latex_markup"
 
 $VERBOSE = true #DEBUG
@@ -23,6 +23,7 @@ class RDoc::Generator::PDF_LaTeX
   
   RDoc::RDoc.add_generator(self) #Tell RDoc about the new generator
 
+  #Description displayed in RDoc’s help.
   DESCRIPTION = "PDF generator based on LaTeX"
   
   #The default command to run PDFLaTeX. Overriden by the TODO commandline option.

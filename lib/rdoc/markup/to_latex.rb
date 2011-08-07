@@ -35,7 +35,8 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   LIST_TYPE2LATEX = {
     :BULLET => ["\\begin{itemize}", "\\end{itemize}"],
     :LABEL => ["\\begin{description}", "\\end{description}"], 
-    :NUMBER => ["\\begin{enumerate}", "\\end{enumerate}"]
+    :NUMBER => ["\\begin{enumerate}", "\\end{enumerate}"],
+    :NOTE => ["\\begin{description}", "\\end{description}"]
   }.freeze
 
   #LaTeX heading commands. 0 is nil as there is no zeroth heading.
@@ -48,7 +49,9 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
                     "\\paragraph*{%s}. "].freeze #h6
 
   #Characters that need to be escaped for LaTeX and their
-  #corresponding escape sequences.
+  #corresponding escape sequences. Note the order if important,
+  #otherwise some things (especiallaly \ and {}) are escaped
+  #twice.
   LATEX_SPECIAL_CHARS = {
     /\\/    => "\\textbackslash{}",
     /\$/    => "\\$",
@@ -56,9 +59,9 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     /%/     => "\\%",
     /\^/    => "\\^",
     /&/     => "\\\\&", #WTF? \\& in gsub doesn't do anything?! TODO: File Ruby bug when back from vaction...
-    /_/     => "\\_",
     /(?<!textbackslash){/  => "\\{",
     /(?<!textbackslash{)}/ => "\\}",
+    /_/     => "\\textunderscore{}",
     /~/     => "\\~",
     /©/     => "\\copyright{}",
     /LaTeX/ => "\\LaTeX{}"
@@ -129,7 +132,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     @result << "\\rule{\\textwidth}{" << rule.weight << "pt}\n"
   end
 
-  #Adds \begin{<list type}.
+  #Adds \begin{<list type>}.
   def accept_list_start(list)
     @result << LIST_TYPE2LATEX[list.type][0] << "\n"
   end
@@ -173,17 +176,24 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     make_url(special.text)
   end
 
-  #Method copied from RDoc project, copyright belongs to them. Ruby’s license.
+  #Called for each plaintext string in a paragraph by
+  #the #convert_flow method called in #to_latex.
+  def convert_string(str)
+    escape(str)
+  end
+  
+  #Method copied from RDoc project and slightly modified, 
+  #copyright belongs to them. Ruby’s license.
   #
   #Handles hyperlinks of form {text}[url] and text[url].
   def handle_special_TIDYLINK(special)
     text = special.text
 
-    return text unless text =~ /\{(.*?)\}\[(.*?)\]/ or text =~ /(\S+)\[(.*?)\]/
+    return escape(text) unless text =~ /\{(.*?)\}\[(.*?)\]/ or text =~ /(\S+)\[(.*?)\]/
 
     label = $1
     url   = $2
-    make_url url, label
+    make_url url, escape(label)
   end
   
   #Escapes all LaTeX control characters from a string.
@@ -194,7 +204,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #==Example
   #  f = RDoc::Markup::ToLaTeX.new
   #  str = "I paid 20$ to buy the_item #15."
-  #  puts f.escape(str) #=> I paid 20\$ to buy the\_item \#15.
+  #  puts f.escape(str) #=> I paid 20\$ to buy the\textunderscore{}item \#15.
   def escape(str)
     result = str.dup
     LATEX_SPECIAL_CHARS.each_pair do |regexp, escape_seq|
@@ -209,12 +219,10 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #does inline formatting!
   def to_latex(item)
     #This method’s code has purely been guessed by looking
-    #at the caller stack for RDoc::Markup::ToHtml and examining
+    #at the caller stack for RDoc::Markup::ToHtml#to_html and examining
     #it’s code. The RDoc team should really document better
     #how to write a formatter!
-    tokens = @am.flow(escape(item)) #See superclass for @am
-    tokens.map!{|t| t.kind_of?(String) ? t.gsub("_", "\\_") : t} #HACK: RDoc removes the backslashes before the underscores!!
-    convert_flow(tokens)
+    convert_flow(@am.flow(item)) #See superclass for @am
   end
   
   #Turns +text+ and +url+ into a LaTeX (hyperref) link via \href.

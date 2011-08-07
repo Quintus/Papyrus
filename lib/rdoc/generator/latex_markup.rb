@@ -46,11 +46,10 @@ module RDoc::Generator::LaTeX_Markup
   def formatter
     return @formatter if defined?(@formatter)
 
-    show_hash     = RDoc::RDoc.current.options.show_hash
-    hyperlink_all = RDoc::RDoc.current.options.hyperlink_all
-    this = self.kind_of?(RDoc::Context) ? self : @parent
-
-    @formatter = RDoc::Markup::ToLaTeX.new(current_heading_level)
+    @formatter = RDoc::Markup::ToLaTeX_Crossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
+                                                    RDoc::RDoc.current.options.show_hash,
+                                                    current_heading_level,
+                                                    RDoc::RDoc.current.options.hyperlink_all)
   end
   
   #Heading depth the formatter is currently in. This is added to

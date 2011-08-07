@@ -102,7 +102,7 @@
 \end{Verbatim}
 
 %     <% unless meth.aliases.empty? %>
-\marginpar{\emph{Aliases: <%= meth.aliases.map{|m| "\\hyperref[#{m.latex_label}]{#{m.name}}"}.join(", ") %>}}
+\marginpar{\footnotesize\emph{Aliases: <%= meth.aliases.map{|m| "\\hyperref[#{m.latex_label}]{#{m.latexized :name}}"}.join(", ") %>}}
 %     <% end %>
 %     <% if meth.is_alias_for %>
 \noindent \emph{Alias for \hyperref[<%= meth.latex_label %>]{<%= meth.is_alias_for.latexized :pretty_name %>}.}
