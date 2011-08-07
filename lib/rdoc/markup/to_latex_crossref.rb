@@ -126,6 +126,11 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #   +display_text+.
   #3. If +name+ was escaped, returns +name+.
   #4. If +name+ is completely unresolved, returns +display_text+.
+  #==Remarks
+  #Note that this method automatically adds explicit LaTeX hyphenation
+  #indications (i.e. <tt>\-</tt>) before namespace separators to
+  #prevent names like <tt>Foo::Bar::Baz::FooBar::Hello::World</tt> from producing
+  #overfull \hbox-es and running out of the page.
   def make_crossref(name, display_name = nil)
     #If no display name is given, calculate it from
     #the original reference name. If the reference
@@ -147,9 +152,9 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
       escape(resolved_name)
     else #Some RDoc::CodeObject sublass instance
       if RDoc::RDoc.current.options.show_pages
-        "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name)}} \\nolinebreak[2][p.~\\pageref{#{resolved_name.latex_label}}]"
+        "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name).gsub("::", "\\-::")}} \\nolinebreak[2][p.~\\pageref{#{resolved_name.latex_label}}]"
       else
-        "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name)}}"
+        "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name).gsub("::", "\\-::")}}"
       end
     end
   end
