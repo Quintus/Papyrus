@@ -61,13 +61,13 @@ class RDoc::Generator::PDF_LaTeX
     options.extend(RDoc::Generator::PDF_LaTeX::Options)
 
     #Define the options themselves
-    options.option_parser.on("--[no-]show-pages", "Enables or disables page numers", "  following hyperlinks in PDF.") do |val|
+    options.option_parser.on("--[no-]show-pages", "(pdf_latex) Enables or disables page", "numbers following hyperlinks (default true).") do |val|
       options.show_pages = val
     end
-    options.option_parser.on("--latex-command=VALUE", "Sets the command to run LaTeX", "  (defaults to #{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_LATEX_COMMAND})") do |val|
+    options.option_parser.on("--latex-command=VALUE", "(pdf_latex) Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_LATEX_COMMAND}')") do |val|
       options.latex_command = val
     end
-    options.option_parser.on("--babel-lang=VALUE", "Sets the language option for babel", "  (defaults to #{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_BABEL_LANG})") do |val|
+    options.option_parser.on("--babel-lang=VALUE", "(pdf_latex) Sets the language option", "for babel (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_BABEL_LANG}')") do |val|
       options.babel_lang = val
     end
   end
