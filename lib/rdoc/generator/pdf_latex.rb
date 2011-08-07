@@ -159,9 +159,15 @@ class RDoc::Generator::PDF_LaTeX
     filename
   end
 
-  #Generates a \hyperref with the given arguments.
-  def hyperref(label, name)
-    "\\hyperref[#{label}]{#{name}}"
+  #Generates a \hyperref with the given arguments.If +show_page+ is
+  #true (default), the page number is appended to the text in square
+  #brackets.
+  def hyperref(label, name, show_page = true)
+    if show_page
+      "\\hyperref[#{label}]{#{name}} \\nolinebreak[2][p.~\\pageref{#{label}}]"
+    else
+      "\\hyperref[#{label}]{#{name}}"
+    end
   end
 
   #Generates a \pageref with the given +label+.
@@ -169,10 +175,10 @@ class RDoc::Generator::PDF_LaTeX
     "\\pageref{#{label}}"
   end
   
-  #Shortcut for calling #hyperref with <tt>meth.latex_label</tt> and
-  #<tt>meth.latexized(:pretty_name)</tt>.
-  def hyperref_method(meth)
-    hyperref(meth.latex_label, meth.latexized(:pretty_name))
+  #Shortcut for calling #hyperref with <tt>meth.latex_label</tt>,
+  #<tt>meth.latexized(:pretty_name)</tt> and +show_page+.
+  def hyperref_method(meth, show_page = true)
+    hyperref(meth.latex_label, meth.latexized(:pretty_name), show_page)
   end
   
 end

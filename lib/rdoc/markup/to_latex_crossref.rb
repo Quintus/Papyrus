@@ -17,6 +17,8 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   attr_accessor :context
 
   #Creates a new instance of this class.
+  #
+  #TODO: Add option for suppressing the page number.
   #==Parameters
   #[context]       The RDoc::Context from which references which be
   #                resolved relatively.
@@ -111,7 +113,9 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #If +name+ can be properly resolved, a \hyperlink construct
   #of the following form is returned:
   #
-  #  \hyperlink[<resolved reference>]{<display_name>}
+  #  \hyperlink[<resolved reference>]{<display_name>}%
+  #  \nolinebreak[2]%
+  #  [p.~\pageref{<resolved reference>}]
   #
   #In any case, the first matching of the following
   #actions is taken:
@@ -142,7 +146,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
     if resolved_name.kind_of?(String)
       escape(resolved_name)
     else #Some RDoc::CodeObject sublass instance
-      "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name)}}"
+      "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name)}} \\nolinebreak[2][p.~\\pageref{#{resolved_name.latex_label}}]"
     end
   end
   

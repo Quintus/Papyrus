@@ -18,16 +18,16 @@
   \hline
 \endhead
 %  <% mod.method_list.sort_by{|m| m.name}.each_slice(3) do |meth1, meth2, meth3| %>
-<%= hyperref_method(meth1) %> & <%= pageref(meth1.latex_label) %> &
+<%= hyperref_method(meth1, false) %> & <%= pageref(meth1.latex_label) %> &
 %
 %    <% if meth2 %>
-<%= hyperref_method(meth2) %> & <%= pageref(meth2.latex_label) %> &
+<%= hyperref_method(meth2, false) %> & <%= pageref(meth2.latex_label) %> &
 %    <% else %>
 &&
 %    <% end %>
 %
 %    <% if meth3 %>
-<%= hyperref_method(meth3) %> & <%= pageref(meth3.latex_label) %> \\
+<%= hyperref_method(meth3, false) %> & <%= pageref(meth3.latex_label) %> \\
 %    <% else %>
 & \\
 %    <% end %>
@@ -102,7 +102,7 @@
 \end{Verbatim}
 
 %     <% unless meth.aliases.empty? %>
-\marginpar{\footnotesize\emph{Aliases: <%= meth.aliases.map{|m| hyperref_method(m)}.join(", ") %>}}
+\marginpar{\footnotesize\emph{Aliases: <%= meth.aliases.map{|m| hyperref_method(m, false)}.join(", ") %>}}
 %     <% end %>
 %     <% if meth.is_alias_for %>
 \noindent \emph{Alias for <%= hyperref(meth.latex_label, meth.is_alias_for.latexized(:pretty_name)) %>}
