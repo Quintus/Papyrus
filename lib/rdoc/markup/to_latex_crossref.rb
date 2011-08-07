@@ -135,7 +135,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
     #name.
     if !display_name
       if name.start_with?("#") and !@show_hash
-        display_name = name[-1..1]
+        display_name = name[1..-1]
       else
         display_name = name
       end
