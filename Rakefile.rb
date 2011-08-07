@@ -19,5 +19,5 @@ task :smoke_test do
   ENV["RDOCOPT"] = nil
   rdoc = RDoc::RDoc.new
   #TODO: How does this RDoc::Options thing work?
-  rdoc.document(%w[-f pdf_latex -m README.rdoc -x Rakefile.rb])
+  rdoc.document(%w[-f pdf_latex -m README.rdoc -x Rakefile.rb --debug])
 end

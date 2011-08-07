@@ -8,10 +8,9 @@ gem "rdoc"
 require "rdoc/rdoc"
 require "rdoc/generator"
 
+require_relative "pdf_latex/options"
 require_relative "../markup/to_latex_crossref"
 require_relative "latex_markup"
-
-$VERBOSE = true #DEBUG
 
 #This is the main class for the PDF generator for RDoc. It examines all
 #the information it gets provided from RDoc in the generate method.
@@ -25,11 +24,6 @@ class RDoc::Generator::PDF_LaTeX
 
   #Description displayed in RDoc’s help.
   DESCRIPTION = "PDF generator based on LaTeX"
-  
-  #The default command to run PDFLaTeX. Overriden by the TODO commandline option.
-  DEFAULT_LaTeX_COMMAND = "pdflatex".freeze
-  #The default language option to pass to the LaTeX babel package.
-  DEFAULT_BABEL_LANG = "english"
   
   #Directory where the LaTeX template files are stored.
   TEMPLATE_DIR = Pathname.new(__FILE__).dirname.expand_path.join("..", "..", "..", "data")
@@ -51,7 +45,6 @@ class RDoc::Generator::PDF_LaTeX
     @options = options
     @base_dir = Pathname.pwd.expand_path
     @output_dir = @base_dir + @options.op_dir
-    @latex_command = DEFAULT_LaTeX_COMMAND #TODO: Commandline option!
     #The following variable is used to generate unique filenames.
     #During processing the ERB templates, many files are created and
     #accidentally creating two files with the same name, effectively
@@ -60,11 +53,29 @@ class RDoc::Generator::PDF_LaTeX
     #main file).
     @counter = 0
   end
+
+  #Called by RDoc during option processing. Adds commandline
+  #switches specific to this generator.
+  def self.setup_options(options)
+    #Define the methods to get and set the options
+    options.extend(RDoc::Generator::PDF_LaTeX::Options)
+
+    #Define the options themselves
+    options.option_parser.on("--[no-]show-pages", "Enables or disables page numers", "  following hyperlinks in PDF.") do |val|
+      options.show_pages = val
+    end
+    options.option_parser.on("--latex-command=VALUE", "Sets the command to run LaTeX", "  (defaults to #{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_LATEX_COMMAND})") do |val|
+      options.latex_command = val
+    end
+    options.option_parser.on("--babel-lang=VALUE", "Sets the language option for babel", "  (defaults to #{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_BABEL_LANG})") do |val|
+      options.babel_lang = val
+    end
+  end
   
   def generate(top_levels)
     #Prepare all the data needed by all the templates
     doc_title = @options.title
-    babel_lang = DEFAULT_BABEL_LANG #TODO: Commandline option!
+    babel_lang = @options.babel_lang
 
     #Get the rdoc file list and move the "main page file" to the beginning.
     rdoc_files = top_levels.select{|t| t.name =~ /\.rdoc$/i}
@@ -98,11 +109,12 @@ class RDoc::Generator::PDF_LaTeX
     temp_dir = @output_dir + "tmp"
     temp_dir.mkpath
     Dir.chdir(temp_dir) do #We want LaTeX to output it’s files into our temporary directory
-      #1. Evaluate the main page
+      #Evaluate the main page which includes all
+      #subpages as necessary.
       main_file = temp_dir + MAIN_FILE_BASENAME
       main_file.open("w"){|f| f.write(MAIN_TEMPLATE.result(binding))}
       
-      #Finally let LaTeX process the whole thing -- 3 times, to ensure
+      #Let LaTeX process the whole thing -- 3 times, to ensure
       #any kinds of references are correct.
       3.times{latex(main_file)}
       
@@ -124,12 +136,12 @@ class RDoc::Generator::PDF_LaTeX
   #the command named on the commandline) wasn't found. This exception
   #is also raised if something goes wrong when calling LaTeX.
   def latex(*opts)
-    cmd = "\"#@latex_command\""
+    cmd = "\"#{@options.latex_command}\""
     opts.each{|o| cmd << " \"#{o}\""}
-    puts cmd if $VERBOSE
+    puts cmd if $DEBUG_RDOC
     Open3.popen3(cmd) do |stdin, stdout, stderr, thread|
       stdin.close #We’re always running noninteractive
-      puts stdout.read if $VERBOSE
+      puts stdout.read if $DEBUG_RDOC
       puts stderr.read
       
       e = thread.value.exitstatus
@@ -159,11 +171,20 @@ class RDoc::Generator::PDF_LaTeX
     filename
   end
 
-  #Generates a \hyperref with the given arguments.If +show_page+ is
-  #true (default), the page number is appended to the text in square
-  #brackets.
-  def hyperref(label, name, show_page = true)
-    if show_page
+  #Generates a \hyperref with the given arguments. +show_page+ may be
+  #one of three values:
+  #[true]  Force page numbers in brackets following the hyperlink.
+  #[false] Suppress page numbers in any case.
+  #[nil]   Use the value of the commandline options --show-pages, which
+  #        defaults to true if not given.
+  #The generated hyperlink will be of the following form:
+  #  \hyperref[<label>]{<name>} [p. page if requested]
+  def hyperref(label, name, show_page = nil)
+    if show_page.nil? and @options.show_pages
+      "\\hyperref[#{label}]{#{name}} \\nolinebreak[2][p.~\\pageref{#{label}}]"
+    elsif show_page.nil? and !@options.show_pages
+      "\\hyperref[#{label}]{#{name}}"
+    elsif show_page
       "\\hyperref[#{label}]{#{name}} \\nolinebreak[2][p.~\\pageref{#{label}}]"
     else
       "\\hyperref[#{label}]{#{name}}"
@@ -177,7 +198,7 @@ class RDoc::Generator::PDF_LaTeX
   
   #Shortcut for calling #hyperref with <tt>meth.latex_label</tt>,
   #<tt>meth.latexized(:pretty_name)</tt> and +show_page+.
-  def hyperref_method(meth, show_page = true)
+  def hyperref_method(meth, show_page = false)
     hyperref(meth.latex_label, meth.latexized(:pretty_name), show_page)
   end
   

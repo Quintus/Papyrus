@@ -146,7 +146,11 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
     if resolved_name.kind_of?(String)
       escape(resolved_name)
     else #Some RDoc::CodeObject sublass instance
-      "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name)}} \\nolinebreak[2][p.~\\pageref{#{resolved_name.latex_label}}]"
+      if RDoc::RDoc.current.options.show_pages
+        "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name)}} \\nolinebreak[2][p.~\\pageref{#{resolved_name.latex_label}}]"
+      else
+        "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name)}}"
+      end
     end
   end
   
