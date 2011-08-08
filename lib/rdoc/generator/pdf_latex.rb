@@ -61,6 +61,10 @@ require_relative "latex_markup"
 #6. The generated PDF file is copied over to the real output directory
 #   and renamed to "Documentation.pdf".
 #7. The temporary directory is recursively deleted.
+#8. A file <tt>index.html</tt> is created inside the output directory
+#   that contains a link to the PDF file. This allows navigating to the
+#   documentation via RubyGems’ server (if somebody really set his
+#   default generator to +pdf_latex+...).
 class RDoc::Generator::PDF_LaTeX
 
   #Generic exception class for this library.
@@ -168,6 +172,16 @@ class RDoc::Generator::PDF_LaTeX
       #Oh, and don’t forget to copy the result file into our documentation
       #directory :-)
       FileUtils.cp(temp_dir + MAIN_FILE_RESULT_BASENAME, @output_dir + "Documentation.pdf")
+
+      #To allow browsing the documentation with the RubyGems server, put an index.html
+      #file there that points to the PDF file.
+      File.open(@output_dir + "index.html", "w") do |f|
+        f.puts("<html>")
+        f.puts("<!-- This file exists to allow browsing docs with the Gem server -->")
+        f.puts("<head><title>#{doc_title}</title></head>")
+        f.puts('<body><p>Documentation available as a <a href="Documentation.pdf">PDF file</a>.</p></body>')
+        f.puts("</html>")
+      end
     end
     
     #Remove the temporary directory (this is *not* done if invoking LaTeX
