@@ -28,15 +28,21 @@ require "rdoc/task"
 require "rubygems/package_task"
 require_relative "lib/rdoc/generator/pdf_latex"
 
+#The project’s title as it appears in the docs.
 PROJECT_TITLE = "LaTeX-PDF generator for RDoc"
+#The project’s name, to be used for the gem name
 PROJECT_NAME = "rdoc_pdf-latex"
+#A one-line summary of the project, used for the gem summary
 PROJECT_SUMMARY = "PDF generator plugin for RDoc"
+#A full description of the whole thing
 PROJECT_DESC =<<DESC
 RDoc PDF LaTeX is a PDF generator plugin for RDoc based on LaTeX. It
 allows you to turn your project's documentation into a nice PDF file
 instead of the usual HTML output.
 DESC
 
+#All core files that belong to the project and shall be
+#included in the gem
 PROJECT_FILES = [
                  Dir["data/*.tex.erb"],
                  Dir["lib/**/*.rb"],
@@ -45,10 +51,12 @@ PROJECT_FILES = [
                  "COPYING"
                  ].flatten
 
+#External dependencies RubyGems cannot fulfill
 PROJECT_REQUIREMENTS = [
                         "(pdf)LaTeX2e: For the actual PDF generation."
                         ]
 
+#The gem specification
 GEMSPEC = Gem::Specification.new do |spec|
   spec.name = PROJECT_NAME
   spec.summary = PROJECT_SUMMARY
@@ -69,15 +77,18 @@ end
 
 Gem::PackageTask.new(GEMSPEC).define
 
+#Temporary directory used for generating the HTML
+#documentation.
 TMP_DOC_DIR = "tmp"
 
-CLOBBER.include(TMP_DOC_DIR)
+CLEAN.include(TMP_DOC_DIR)
 ENV["RDOCOPT"] = nil #Needed to override my "-f hanna" default
 
 desc "Generate RDoc documentation in HTML format."
-task :html_rdoc => :clobber_rdoc do
-  #This is tricky, as the Rakefile already loads the
-  #PDF generator: Create a new Rakefile and use that one!
+task :rdoc_html do
+  #This is a workaround the situation that defining
+  #multiple RDoc::Tasks in a Rakefile doesn't work
+  #correctly--if calling one of the task, *all* get executed.
   mkdir TMP_DOC_DIR
   cd TMP_DOC_DIR
   File.open("Rakefile", "w") do |f|
@@ -98,19 +109,13 @@ end
   cd ".."
 end
 
+desc "Rebuild the HTML docs."
+task :rerdoc_html => [:clobber_rdoc, :rdoc_html]
+
 RDoc::Task.new do |r|
   r.generator = "pdf_latex"
   r.rdoc_files.include("lib/**/*.rb", "**/*.rdoc", "README.rdoc", "COPYING")
-  r.title = #{PROJECT_TITLE}
+  r.title = PROJECT_TITLE
   r.main = "README.rdoc"
   r.rdoc_dir = "doc"
 end
-
-#desc "Tests the whole thing by documenting this project with the PDF-LaTeX generator."
-#task :smoke_test do
-#  rm_rf PDFDOC_DIR
-#  ENV["RDOCOPT"] = nil
-#  rdoc = RDoc::RDoc.new
-#  #TODO: How does this RDoc::Options thing work?
-#  rdoc.document(["-f","pdf_latex", "-m", "README.rdoc", "-x", "Rakefile.rb", "--debug", "-o", PDFDOC_DIR])
-#end
