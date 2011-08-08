@@ -27,10 +27,7 @@ require "open3"
 gem "rdoc"
 require "rdoc/rdoc"
 require "rdoc/generator"
-
-require_relative "pdf_latex/options"
-require_relative "../markup/to_latex_crossref"
-require_relative "latex_markup"
+require_relative "pdf_latex/options" #Rest required in #initialize
 
 #This is the main class for the PDF generator for RDoc. It takes
 #RDoc’s raw parsed data and transforms it into a single PDF file
@@ -102,6 +99,14 @@ class RDoc::Generator::PDF_LaTeX
   #==Return value
   #The newly created instance.
   def initialize(options)
+    #The requiring of the rest of the library *must* be placed here,
+    #because otherwise it’s loaded during RDoc’s discovering process,
+    #effectively eliminating the possibility to generate anything
+    #other than LaTeX output due to the overwrites the
+    #RDoc::Generator::LaTeX_Markup module does.
+    require_relative "../markup/to_latex_crossref"
+    require_relative "latex_markup"
+    
     @options = options
     @output_dir = Pathname.pwd.expand_path + @options.op_dir
     #The following variable is used to generate unique filenames.
