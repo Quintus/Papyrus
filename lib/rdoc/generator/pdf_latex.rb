@@ -252,8 +252,10 @@ class RDoc::Generator::PDF_LaTeX
     unless @options.dry_run
       Open3.popen3(cmd) do |stdin, stdout, stderr, thread|
         stdin.close #We’re always running noninteractive
-        print stdout.read if $DEBUG_RDOC
-        print stderr.read
+        if $DEBUG_RDOC
+          print stdout.read
+          print stderr.read
+        end
         
         e = thread.value.exitstatus
         unless e == 0
