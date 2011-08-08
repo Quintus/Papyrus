@@ -100,8 +100,7 @@ class RDoc::Generator::PDF_LaTeX
   #The newly created instance.
   def initialize(options)
     @options = options
-    @base_dir = Pathname.pwd.expand_path
-    @output_dir = @base_dir + @options.op_dir
+    @output_dir = Pathname.pwd.expand_path + @options.op_dir
     #The following variable is used to generate unique filenames.
     #During processing the ERB templates, many files are created and
     #accidentally creating two files with the same name, effectively
@@ -179,15 +178,19 @@ class RDoc::Generator::PDF_LaTeX
     @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort
 
     #Start the template filling process
-    temp_dir = @output_dir + "tmp"
-    temp_dir.mkpath
+    if @options.dry_run
+      temp_dir = Pathname.pwd #No output directory in dryrun mode!
+    else
+      temp_dir = @output_dir + "tmp"
+      temp_dir.mkpath
+    end
     debug("Temporary directory is at '#{temp_dir.expand_path}'")
     Dir.chdir(temp_dir) do #We want LaTeX to output it’s files into our temporary directory
       #Evaluate the main page which includes all
       #subpages as necessary.
       debug("Evaluating main ERB temlpate")
       main_file = temp_dir + MAIN_FILE_BASENAME
-      main_file.open("w"){|f| f.write(MAIN_TEMPLATE.result(binding))}
+      main_file.open("w"){|f| f.write(MAIN_TEMPLATE.result(binding))} unless @options.dry_run
       
       #Let LaTeX process the whole thing -- 3 times, to ensure
       #any kinds of references are correct.
@@ -197,17 +200,22 @@ class RDoc::Generator::PDF_LaTeX
       #Oh, and don’t forget to copy the result file into our documentation
       #directory :-)
       debug("Copying resulting Documentation.pdf file")
-      FileUtils.cp(temp_dir + MAIN_FILE_RESULT_BASENAME, @output_dir + "Documentation.pdf")
-
+      unless @options.dry_run
+        FileUtils.rm(@output_dir + "Documentation.pdf") if File.file?(@output_dir + "Documentation.pdf")
+        FileUtils.cp(temp_dir + MAIN_FILE_RESULT_BASENAME, @output_dir + "Documentation.pdf")
+      end
+      
       #To allow browsing the documentation with the RubyGems server, put an index.html
       #file there that points to the PDF file.
       debug("Creating index.html")
-      File.open(@output_dir + "index.html", "w") do |f|
-        f.puts("<html>")
-        f.puts("<!-- This file exists to allow browsing docs with the Gem server -->")
-        f.puts("<head><title>#{doc_title}</title></head>")
-        f.puts('<body><p>Documentation available as a <a href="Documentation.pdf">PDF file</a>.</p></body>')
-        f.puts("</html>")
+      unless @options.dry_run
+        File.open(@output_dir + "index.html", "w") do |f|
+          f.puts("<html>")
+          f.puts("<!-- This file exists to allow browsing docs with the Gem server -->")
+          f.puts("<head><title>#{doc_title}</title></head>")
+          f.puts('<body><p>Documentation available as a <a href="Documentation.pdf">PDF file</a>.</p></body>')
+          f.puts("</html>")
+        end
       end
     end
     
@@ -215,7 +223,7 @@ class RDoc::Generator::PDF_LaTeX
     #failed, as the #latex method throws an exception. This is useful for
     #debugging the generated LaTeX files)
     debug("Removing temporary directory")
-    temp_dir.rmtree
+    temp_dir.rmtree unless @options.dry_run
   end
 
   private
@@ -233,14 +241,16 @@ class RDoc::Generator::PDF_LaTeX
     cmd = "\"#{@options.latex_command}\""
     opts.each{|o| cmd << " \"#{o}\""}
     puts cmd if $DEBUG_RDOC
-    Open3.popen3(cmd) do |stdin, stdout, stderr, thread|
-      stdin.close #We’re always running noninteractive
-      print stdout.read if $DEBUG_RDOC
-      print stderr.read
-      
-      e = thread.value.exitstatus
-      unless e == 0
-        raise(PDF_LaTeX_Error, "Invoking #{@options.latex_command} failed with exitstatus #{e}!")
+    unless @options.dry_run
+      Open3.popen3(cmd) do |stdin, stdout, stderr, thread|
+        stdin.close #We’re always running noninteractive
+        print stdout.read if $DEBUG_RDOC
+        print stderr.read
+        
+        e = thread.value.exitstatus
+        unless e == 0
+          raise(PDF_LaTeX_Error, "Invoking #{@options.latex_command} failed with exitstatus #{e}!")
+        end
       end
     end
   rescue Errno::ENOENT => e
