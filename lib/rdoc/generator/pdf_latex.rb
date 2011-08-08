@@ -75,6 +75,9 @@ class RDoc::Generator::PDF_LaTeX
 
   #Description displayed in RDoc’s help.
   DESCRIPTION = "PDF generator based on LaTeX"
+
+  #The version number.
+  VERSION = Pathname.new(__FILE__).dirname.parent.parent.parent.join("VERSION.txt").read.chomp.freeze
   
   #Directory where the LaTeX template files are stored.
   TEMPLATE_DIR = Pathname.new(__FILE__).dirname.expand_path.join("..", "..", "..", "data")
