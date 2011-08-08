@@ -260,18 +260,25 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds \begin{<list type>}.
   def accept_list_start(list)
+    @list_in_progress = list.type
     @result << LIST_TYPE2LATEX[list.type][0] << "\n"
   end
 
   #Adds \end{list_type}.
   def accept_list_end(list)
     @result << LIST_TYPE2LATEX[list.type][1] << "\n"
+    @list_in_progress = nil
   end
 
   #Adds \item[label_if_necessary].
   def accept_list_item_start(item)
     if item.label
-      @result << "\\item[#{escape(item.label)}] " #Newline done by ending method
+      
+      if @list_in_progress == :NOTE
+        @result << "\\item[#{escape(item.label)}:] " #Newline done by ending method
+      else
+        @result << "\\item[#{escape(item.label)}] " #Newline done by ending method
+      end
     else
       @result << "\\item " #Newline done by ending method
     end

@@ -90,7 +90,8 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
 
   #Wheather or not this formatter tries to resolve
   #even words that may not be references (such as "new"),
-  #i.e. those with no method prefix # or :: in front and all
+  #i.e. those with no method prefix <tt>#</tt> or 
+  #<tt>::</tt> in front and all
   #in lowercase.
   #==Return value
   #Either true or false
