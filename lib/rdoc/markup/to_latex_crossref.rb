@@ -115,7 +115,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #Adds handling of encountered <tt>rdoc-ref</tt> links
   #to the HYPERLINK handler of the ToLaTeX formatter.
   def handle_special_HYPERLINK(special)
-    return make_crossref($') if spec.text =~ /^rdoc-ref:/
+    return make_crossref($') if special.text =~ /^rdoc-ref:/
     super
   end
   

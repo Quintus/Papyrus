@@ -81,7 +81,7 @@ module RDoc::Generator::LaTeX_Markup
   def current_heading_level
     case self
     when RDoc::TopLevel then 0
-    when RDoc::ClassModule then 0 #Never-ever use level 1 headings apart from TopLevels...
+    when RDoc::ClassModule then 1 #Never-ever use level 1 headings apart from TopLevels...
     when RDoc::MethodAttr, RDoc::Alias, RDoc::Constant, RDoc::Include then 3
     else
       0
@@ -127,7 +127,7 @@ end
 class RDoc::AnyMethod
   include Comparable
   
-  #Compares to methods with each other. A method is considered smaller
+  #Compares two methods with each other. A method is considered smaller
   #than another if it is a class method. If +self+ and +other+ are both
   #of the same type (either "class" or "instance"), they’re compared
   #alphabetically.
