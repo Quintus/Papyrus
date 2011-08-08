@@ -111,24 +111,45 @@ class RDoc::Generator::PDF_LaTeX
     @counter = 0
   end
 
-  #Called by RDoc during option processing. Adds commandline
-  #switches specific to this generator.
-  #==Parameter
-  #[options] The yet unparsed RDoc::Options.
-  def self.setup_options(options)
-    #Define the methods to get and set the options
-    options.extend(RDoc::Generator::PDF_LaTeX::Options)
+  class << self
 
-    #Define the options themselves
-    options.option_parser.on("--[no-]show-pages", "(pdf_latex) Enables or disables page", "numbers following hyperlinks (default true).") do |val|
-      options.show_pages = val
+    #Called by RDoc during option processing. Adds commandline
+    #switches specific to this generator.
+    #==Parameter
+    #[options] The yet unparsed RDoc::Options.
+    def setup_options(options)
+      debug("Teaching new options to RDoc")
+      #Define the methods to get and set the options
+      options.extend(RDoc::Generator::PDF_LaTeX::Options)
+
+      #Define the options themselves
+      options.option_parser.on("--[no-]show-pages", "(pdf_latex) Enables or disables page", "numbers following hyperlinks (default true).") do |val|
+        debug("Found --show-pages: #{val}")
+        options.show_pages = val
+      end
+      options.option_parser.on("--latex-command=VALUE", "(pdf_latex) Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_LATEX_COMMAND}')") do |val|
+        debug("Found --latex-command: #{val}")
+        options.latex_command = val
+      end
+      options.option_parser.on("--babel-lang=VALUE", "(pdf_latex) Sets the language option", "for babel (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_BABEL_LANG}')") do |val|
+        debug("Found --babel-lang: #{val}")
+        options.babel_lang = val
+      end
     end
-    options.option_parser.on("--latex-command=VALUE", "(pdf_latex) Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_LATEX_COMMAND}')") do |val|
-      options.latex_command = val
+
+    private
+
+    #If RDoc is invoked in debug mode, writes out +str+ using
+    #+puts+ (prepending "[pdf_latex] ") and calls it’s block 
+    #if one was given. If RDoc isn’t invoked in debug mode, 
+    #does nothing.
+    def debug(str = nil)
+      if $DEBUG_RDOC
+        puts "[pdf_latex] #{str}" if str
+        yield if block_given?
+      end
     end
-    options.option_parser.on("--babel-lang=VALUE", "(pdf_latex) Sets the language option", "for babel (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_BABEL_LANG}')") do |val|
-      options.babel_lang = val
-    end
+
   end
 
   #Called by RDoc after parsing has happened in order to generate the output.
@@ -141,40 +162,46 @@ class RDoc::Generator::PDF_LaTeX
     babel_lang = @options.babel_lang
 
     #Get the rdoc file list and move the "main page file" to the beginning.
+    debug("Examining toplevel files")
     @rdoc_files = top_levels.select{|t| t.name =~ /\.rdoc$/i}
+    debug("Found #{@rdoc_files.count} toplevels ending in .rdoc that will be processed")
     if @options.main_page #nil if not set, no main page
       main_index = @rdoc_files.index{|t| t.full_name == @options.main_page}
       @rdoc_files.unshift(@rdoc_files.slice!(main_index))
+      debug("Main page is #{@rdoc_files.first.name}")
     end
 
-    #Get the class and module lists, sorted alphabetically by their full names
+    #Get the class, module and methods lists, sorted alphabetically by their full names
+    debug("Sorting classes, modules and methods")
     @classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
     @modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
-    #Get the method list and sort it like this:
-    #1. Class/module methods, alphabetically
-    #2. Instance methods, alphabetically
     @classes_and_modules = @classes.concat(@modules).sort_by{|mod| mod.full_name}
     @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort
 
     #Start the template filling process
     temp_dir = @output_dir + "tmp"
     temp_dir.mkpath
+    debug("Temporary directory is at '#{temp_dir.expand_path}'")
     Dir.chdir(temp_dir) do #We want LaTeX to output it’s files into our temporary directory
       #Evaluate the main page which includes all
       #subpages as necessary.
+      debug("Evaluating main ERB temlpate")
       main_file = temp_dir + MAIN_FILE_BASENAME
       main_file.open("w"){|f| f.write(MAIN_TEMPLATE.result(binding))}
       
       #Let LaTeX process the whole thing -- 3 times, to ensure
       #any kinds of references are correct.
+      debug("Invoking LaTeX")
       3.times{latex(main_file)}
       
       #Oh, and don’t forget to copy the result file into our documentation
       #directory :-)
+      debug("Copying resulting Documentation.pdf file")
       FileUtils.cp(temp_dir + MAIN_FILE_RESULT_BASENAME, @output_dir + "Documentation.pdf")
 
       #To allow browsing the documentation with the RubyGems server, put an index.html
       #file there that points to the PDF file.
+      debug("Creating index.html")
       File.open(@output_dir + "index.html", "w") do |f|
         f.puts("<html>")
         f.puts("<!-- This file exists to allow browsing docs with the Gem server -->")
@@ -187,10 +214,16 @@ class RDoc::Generator::PDF_LaTeX
     #Remove the temporary directory (this is *not* done if invoking LaTeX
     #failed, as the #latex method throws an exception. This is useful for
     #debugging the generated LaTeX files)
+    debug("Removing temporary directory")
     temp_dir.rmtree
   end
 
   private
+
+  #Invokes the class method ::debug.
+  def debug(str = nil, &block)
+    self.class.send(:debug, str, &block) #Private class method
+  end
   
   #Runs the LaTeX command with the specified +opts+, which will be quoted
   #by this method. Raises PDF_LaTeX_Error if the +pdflatex+ command (or
@@ -218,6 +251,7 @@ class RDoc::Generator::PDF_LaTeX
   #relative path (relative to the temporary directory) to the file.
   #Suitable for use with \input in the main template.
   def render_module(mod)
+    debug("Rendering module ERB template for #{mod.name}")
     filename = "#{@counter}_#{mod.name}.tex"; @counter += 1
     File.open(filename, "w"){|f| f.write(MODULE_TEMPLATE.result(binding))}
     filename
@@ -227,6 +261,7 @@ class RDoc::Generator::PDF_LaTeX
   #relative path (relative to the temporary directory) to the file.
   #Suitable for use with \input in the main template.
   def render_rdoc_file(rdoc_file)
+    debug("Rendering file ERB template for #{rdoc_file.name}")
     filename = "#{@counter}_#{rdoc_file.name}.tex"; @counter += 1
     File.open(filename, "w"){|f| f.write(RDOC_FILE_TEMPLATE.result(binding))}
     filename
