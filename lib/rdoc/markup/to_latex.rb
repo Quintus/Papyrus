@@ -256,7 +256,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #Adds a \rule. The rule’s height is <tt>rule.weight</tt> pt, the
   #rule’s with \textwidth.
   def accept_rule(rule)
-    @result << "\\rule{\\textwidth}{" << rule.weight << "pt}\n"
+    @result << "\\par\\noindent\\rule{\\textwidth}{" << rule.weight.to_s << "pt}\\par\n"
   end
 
   #Adds \begin{<list type>}.
