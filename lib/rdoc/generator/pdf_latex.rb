@@ -32,7 +32,7 @@ require_relative "pdf_latex/options" #Rest required in #initialize
 #This is the main class for the PDF generator for RDoc. It takes
 #RDoc’s raw parsed data and transforms it into a single PDF file
 #backed by pdfLaTeX. If you’re interested in how this process works,
-#feel free to dig into this class’s code, but ensure you also have
+#feel free to dig into this class’ code, but ensure you also have
 #a look on the Markup::ToLaTeX class which does the heavy work of
 #translating the markup tokens into LaTeX code. The below section
 #also has a brief overview of how the generation process works.

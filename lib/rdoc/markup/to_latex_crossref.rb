@@ -39,7 +39,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
 
   #Creates a new instance of this class.
   #==Parameters
-  #[context]       The RDoc::Context from which references which be
+  #[context]       The RDoc::Context from which references will be
   #                resolved relatively.
   #[show_hash]     Wheather or not to show hash signs # in front of
   #                methods if present.
@@ -49,7 +49,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #                more information.
   #[hyperlink_all] (false) If true, tries to hyperlink everything that
   #                looks like a method name. If false, just hyperlink
-  #                references with mixed-case or uppercase words and
+  #                references with mixed-case or uppercase words or
   #                references starting with # or ::.
   #[markup]        TODO.
   #==Return value
@@ -80,7 +80,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #Wheather or not the hash signs # are shown in front of
   #methods.
   #==Return value
-  #Either true or false
+  #Either true or false.
   #==Example
   #  f.show_hashes? #=> true
   def show_hash?
@@ -91,10 +91,9 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #Wheather or not this formatter tries to resolve
   #even words that may not be references (such as "new"),
   #i.e. those with no method prefix <tt>#</tt> or 
-  #<tt>::</tt> in front and all
-  #in lowercase.
+  #<tt>::</tt> in front and all in lowercase.
   #==Return value
-  #Either true or false
+  #Either true or false.
   #==Example
   #  f.hyperlink_all? #=> false
   def hyperlink_all?

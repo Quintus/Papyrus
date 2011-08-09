@@ -105,7 +105,7 @@ require "rdoc/markup/inline"
 #expression matched. Apply whatever you want, and return a string RDoc will incorporate
 #into the result.
 #
-#During the formatting process RDoc calls various method on your
+#During the formatting process RDoc calls various methods on your
 #formatter, the full list can be seen in the documentation for the
 #class RDoc::Markup::Formatter. Note that *those* methods should _not_
 #return a string--in fact, RDoc ignores their return values. You are
@@ -115,7 +115,7 @@ require "rdoc/markup/inline"
 #
 #When everything has been processed, RDoc calls the +end_accepting+ method
 #on your formatter instance. It’s return value is expected to be the complete
-#parsing result, so if your used a string instance variable @result as
+#parsing result, so if you used a string instance variable @result as
 #I recommended above, you should return it’s value from that method.
 #
 #=== Inline formatting
@@ -195,7 +195,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   }.freeze
 
   #Level relative to which headings are produced from this
-  #formater. E.g., if this is 1, and the user requests a level
+  #formatter. E.g., if this is 1, and the user requests a level
   #2 heading, he actually gets a level 3 one.
   attr_reader :heading_level
   
@@ -254,7 +254,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   end
 
   #Adds a \rule. The rule’s height is <tt>rule.weight</tt> pt, the
-  #rule’s with \textwidth.
+  #rule’s width \textwidth.
   def accept_rule(rule)
     @result << "\\par\\noindent\\rule{\\textwidth}{" << rule.weight.to_s << "pt}\\par\n"
   end

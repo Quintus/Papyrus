@@ -1,33 +1,35 @@
 # -*- coding: utf-8 -*-
-=begin
-This file is part of RDoc PDF LaTeX.
+#This file is part of RDoc PDF LaTeX.
+#
+#RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
+#Copyright © 2011  Pegasus Alpha
+#
+#RDoc PDF LaTeX is free software; you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation; either version 2 of the License, or
+#(at your option) any later version.
+#
+#RDoc PDF LaTeX is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with RDoc PDF LaTeX; if not, write to the Free Software
+#Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
-Copyright © 2011  Pegasus Alpha
-
-RDoc PDF LaTeX is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-RDoc PDF LaTeX is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with RDoc PDF LaTeX; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-=end
-
-#Mixin module mixed into RDoc::CodeObject and RDoc::Context::Section
+#Mixin module mixed into RDoc::CodeObject subclasses in order
 #to overwrite RDoc’s standard RDoc::Generator::Markup mixin module that
 #forces RDoc to HTML output. This module forces RDoc to LaTeX output ;-).
+#
+#Note that just mixing this into RDoc::CodeObject isn’t enough as the
+#RDoc::Generator::Markup module is mixed into the subclasses and
+#would therefore take precedence during method lookup.
 module RDoc::Generator::LaTeX_Markup
 
   #Create an unique label for this CodeObject.
   #==Return value
-  #A string (hopefully) uniquely identifying this CodeObject. Inteded for
+  #A string (hopefully) uniquely identifying this CodeObject. Intended for
   #use as the reference in a <tt>\href</tt> command.
   #==Raises
   #[PDF_LaTeX_Error] +self+ isn’t a CodeObject (→ Context::Section).
@@ -60,7 +62,9 @@ module RDoc::Generator::LaTeX_Markup
   end
   
   #Instanciates the LaTeX formatter if it is necessary and stores it
-  #in an instance variable @formatter. 
+  #in an instance variable @formatter. This method is automatically
+  #called by RDoc to obtain the formatter this generator wants
+  #to use.
   #==Return value
   #Returns the newly instanciated or already stored LaTeX formatter.
   def formatter
