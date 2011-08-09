@@ -250,7 +250,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Puts ver’s text between \begin{verbatim} and \end{verbatim}
   def accept_verbatim(ver)
-    @result << "\\begin{Verbatim}\n" << ver.text << "\n\\end{Verbatim}\n"
+    @result << "\\begin{Verbatim}\n" << ver.text.chomp << "\n\\end{Verbatim}\n"
   end
 
   #Adds a \rule. The rule’s height is <tt>rule.weight</tt> pt, the
