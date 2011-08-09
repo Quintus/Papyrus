@@ -169,7 +169,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
     resolved_name = @crossref_resolver.resolve(name, display_name)
 
     if resolved_name.kind_of?(String)
-      escape(resolved_name)
+      escape(resolved_name).gsub("::", "\\-::")
     else #Some RDoc::CodeObject sublass instance
       if RDoc::RDoc.current.options.show_pages
         "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name).gsub("::", "\\-::")}} \\nolinebreak[2][p.~\\pageref{#{resolved_name.latex_label}}]"
