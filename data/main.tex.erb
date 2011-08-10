@@ -83,6 +83,27 @@
 %Code without specification
 \newcommand{\code}[1]{\texttt{#1}}
 
+%Environments for RDoc’s lists
+%1. Completely lower-alpha list
+\newenvironment{lalphaenum}{
+  \renewcommand{\theenumi}{\alph{enumi}}
+  \renewcommand{theenumii}{\alph{enumii}}
+  \renewcommand{\theenumiii}{\alph{enumiii}}
+  \renewcommand{\theenumiv}{\alph{enumiv}}
+  \begin{enumerate}}{
+  \end{enumerate}
+}
+
+%2. Completely upper-alpha list
+\newenvironment{ualphaenum}{
+  \renewcommand{\theenumi}{\Alph{enumi}}
+  \renewcommand{theenumii}{\Alph{enumii}}
+  \renewcommand{\theenumiii}{\Alph{enumiii}}
+  \renewcommand{\theenumiv}{\Alph{enumiv}}
+  \begin{enumerate}}{
+  \end{enumerate}
+}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Package-specific settings
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

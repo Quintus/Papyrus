@@ -156,12 +156,13 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   include RDoc::Text
 
   #Maps RDoc’s list types to the corresponding LaTeX ones.
-  #TODO: There are some missing here!
   LIST_TYPE2LATEX = {
     :BULLET => ["\\begin{itemize}", "\\end{itemize}"],
-    :LABEL => ["\\begin{description}", "\\end{description}"], 
     :NUMBER => ["\\begin{enumerate}", "\\end{enumerate}"],
-    :NOTE => ["\\begin{description}", "\\end{description}"]
+    :LABEL  => ["\\begin{description}", "\\end{description}"],
+    :UALPHA => ["\\begin{ualphaenum}", "\\end{ualphaenum}"],
+    :LALPHA => ["\\begin{lalphaenum}", "\\end{lalphaenum}"],
+    :NOTE   => ["\\begin{description}", "\\end{description}"]
   }.freeze
 
   #LaTeX heading commands. 0 is nil as there is no zeroth heading.
@@ -199,6 +200,12 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #formatter. E.g., if this is 1, and the user requests a level
   #2 heading, he actually gets a level 3 one.
   attr_reader :heading_level
+  #Contains everything processed so far as a string.
+  attr_reader :result
+  alias res result
+  #The innermost type of list we’re currently in or +nil+
+  #if we don’t process a list at the moment.
+  attr_reader :list_in_progress
   
   #Instanciates this formatter.
   #==Parameters
@@ -219,6 +226,8 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     super(markup)
     
     @heading_level = heading_level
+    @result = ""
+    @list_in_progress = nil
     
     #Copied from RDoc 3.8, adds link capabilities
     @markup.add_special(/((link:|https?:|mailto:|ftp:|www\.)\S+\w)/, :HYPERLINK)
@@ -277,22 +286,25 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     if item.label
       
       if @list_in_progress == :NOTE
-        @result << "\\item[#{escape(item.label)}:] " #Newline done by ending method
+        @result << "\\item[#{escape(item.label)}:] " #Newline done by ending paragraph
       else
-        @result << "\\item[#{escape(item.label)}] " #Newline done by ending method
+        @result << "\\item[#{escape(item.label)}] " #Newline done by ending paragraph
       end
     else
       @result << "\\item " #Newline done by ending method
     end
   end
 
-  #Adds the terminating newline for an item.
+  #Adds a terminating \n for a list item if this is necessary
+  #(usually the newline is automatically created by processing
+  #the list paragraph).
   def accept_list_item_end(item)
-    @result << "\n"
+    @result << "\n" unless @result.end_with?("\n")
   end
 
   #Termiantes a paragraph by inserting two newlines.
   def accept_blank_line(line)
+    @result.chomp!
     @result << "\n\n"
   end
 
