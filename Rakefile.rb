@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 gem "rdoc", ">= 3"
 require "rake"
 require "rake/clean"
+require "rake/testtask"
 require "rdoc/task"
 require "rubygems/package_task"
 require_relative "lib/rdoc/generator/pdf_latex"
@@ -118,4 +119,9 @@ RDoc::Task.new do |r|
   r.title = PROJECT_TITLE
   r.main = "README.rdoc"
   r.rdoc_dir = "doc"
+end
+
+Rake::TestTask.new do |t|
+  t.test_files = Dir["test/test_*.rb"]
+  t.verbose = true
 end
