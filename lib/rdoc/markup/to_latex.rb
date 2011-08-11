@@ -315,7 +315,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Writes the raw thing as-is into the document. 
   def accept_raw(raw)
-    @result << escape(raw.parts.join("\n"))
+    @result << raw.parts.join("\n")
   end
 
   #Handles raw hyperlinks.
