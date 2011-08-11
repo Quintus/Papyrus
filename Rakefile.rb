@@ -125,3 +125,10 @@ Rake::TestTask.new do |t|
   t.test_files = Dir["test/test_*.rb"]
   t.verbose = true
 end
+
+task :rdoc_set_debug do
+  ENV["RDOCOPT"] = "--debug"
+end
+
+desc "Runs the PDF generation in debug mode."
+task :rdoc_debug => [:clobber_rdoc, :rdoc_set_debug, :rdoc]
