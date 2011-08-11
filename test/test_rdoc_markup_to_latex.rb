@@ -54,7 +54,7 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
   end
 
   def accept_heading_suppressed_crossref
-    assert_equal("\\section{Hello}\n", @to.result)
+    assert_equal("\\section{\\textbackslash{}Hello}\n", @to.result)
   end
 
   def accept_paragraph
@@ -183,7 +183,12 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
   end
 
   def accept_list_item_start_note_2
-    assert_equal("\\begin{description}\n\\item[\texttt{teletype}] teletype description\n\\end{description}", @to.result)
+    expect =<<-EX
+\\begin{description}
+\\item[\\texttt{teletype}:] teletype description
+\\end{description}
+    EX
+    assert_equal(expect, @to.result)
   end
   
   def accept_list_item_start_number
@@ -230,6 +235,35 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
   end
 
   def accept_list_item_end_note
+  end
+
+  #This is intended to test raw LaTeX input, rather
+  #then raw HTML which doesn't need to be escaped
+  #in LaTeX (except for the underscores).
+  def test_accept_raw_2
+    raw = "$f(x) = \\frac{1}{2}x^2 + 42$"
+    @to.start_accepting
+    @to.accept_raw(@RM::Raw.new(raw))
+    assert_equal(raw, @to.result)
+  end
+
+  def test_escape
+    str = "10$ for the_item #5. Costs 20% & more \\too\\ much!"
+    expect = "10\\$ for the\\textunderscore{}item \\#5. Costs 20\\% \\& more \\textbackslash{}too\\textbackslash{} much!"
+    assert_equal(expect, @to.escape(str))
+  end
+
+  def test_heading_levels
+    f0 = RDoc::Markup::ToLaTeX.new
+    f1 = RDoc::Markup::ToLaTeX.new(1)
+    f4 = RDoc::Markup::ToLaTeX.new(4)
+
+    assert_equal("\\section{Hello}\n", f0.convert("=Hello"))
+    assert_equal("\\subsection{Hello}\n", f0.convert("==Hello"))
+    assert_equal("\\subsection{Hello}\n", f1.convert("=Hello"))
+    assert_equal("\\subsubsection{Hello}\n", f1.convert("==Hello"))
+    assert_equal("\\microsection*{Hello}\n", f4.convert("=Hello"))
+    assert_equal("\\paragraph*{Hello.} \n", f4.convert("==Hello"))
   end
   
 end
