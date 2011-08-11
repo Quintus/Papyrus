@@ -286,9 +286,9 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     if item.label
       
       if @list_in_progress == :NOTE
-        @result << "\\item[#{escape(item.label)}:] " #Newline done by ending paragraph
+        @result << "\\item[#{to_latex_suppress_crossref(item.label)}:] " #Newline done by ending paragraph
       else
-        @result << "\\item[#{escape(item.label)}] " #Newline done by ending paragraph
+        @result << "\\item[#{to_latex_suppress_crossref(item.label)}] " #Newline done by ending paragraph
       end
     else
       @result << "\\item " #Newline done by ending method
@@ -310,7 +310,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds a fitting \section, \subsection, etc. for the heading.
   def accept_heading(head)
-    @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], escape(head.text)) << "\n"
+    @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], to_latex_suppress_crossref(head.text)) << "\n"
   end
 
   #Writes the raw thing as-is into the document. 
@@ -360,6 +360,17 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   end
 
   private
+
+  #LaTeX doesn't like excessive cross-references in certain
+  #playes, e.g. headings. To allow for inline formatting without
+  #cross-references, this method exists. It’s exactly the same
+  #as #to_latex, except it’ll never rely on subclasses such
+  #as ToLaTeX_Crossref.
+  def to_latex_suppress_crossref(item)
+    RDoc::Markup::ToLaTeX.new(@heading_level).instance_eval do
+      convert_flow(@am.flow(item))
+    end
+  end
 
   #Converts +item+ to LaTeX text. Difference to #escape: It
   #does inline formatting!

@@ -60,16 +60,16 @@ in your documentation output directory (usually <tt>doc/</tt>).
 
 The PDF generator adds some commandline options to RDoc, namely:
 
-[--show-pages]
+[<tt>--show-pages</tt>]
   Allows you to suppress the page numbers automatically added
   to each cross reference. If you know you won’t print your
   documentation and your PDF viewer supports cross-references,
   you may turn them off via <tt>--no-show-pages</tt>. Defaults
   to true.
-[--latex-command]
+[<tt>--latex-command</tt>]
   If your pdfLaTeX’s executable for whatever reason isn’t named
   +pdflatex+ (the default), you can set the name here.
-[--babel-lang]
+[<tt>--babel-lang</tt>]
   If you write your documentation in a language other than English,
   this option may be interesting for you. It specified the option(s)
   passed to the +babel+ package loaded in the main generated LaTeX
@@ -82,11 +82,11 @@ The PDF generator adds some commandline options to RDoc, namely:
 * The sourcecode is hosted at GitHub: https://github.com/Quintus/rdoc_pdf-latex
 * Report bugs at: https://github.com/Quintus/rdoc_pdf-latex/issues
 
-== Known problems
+== Known Problems
 
-* Formatting inside arguments of definition lists doesn’t work, i.e.
-    [<tt>something</tt>] Description
-  will result in having the TT tags in the PDF file.
+* No cross-referencing inside headings and the labels of labeled lists.
+  This is a technical restriction as the complex references this
+  template creates confuse LaTeX when used in that places.
 
 == Author
 
