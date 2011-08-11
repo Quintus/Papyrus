@@ -71,8 +71,9 @@ module RDoc::Generator::LaTeX_Markup
     return @formatter if defined?(@formatter)
 
     @formatter = RDoc::Markup::ToLaTeX_Crossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
-                                                    RDoc::RDoc.current.options.show_hash,
                                                     current_heading_level,
+                                                    RDoc::RDoc.current.options.show_hash,
+                                                    RDoc::RDoc.current.options.show_pages,
                                                     RDoc::RDoc.current.options.hyperlink_all)
   end
   

@@ -56,11 +56,12 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #The newly created instance.
   #==Example
   #  f = RDoc::Markup::ToLaTeX_Crossref.new(a_rdoc_toplevel, false)
-  def initialize(context, show_hash, heading_level = 0, hyperlink_all = false, markup = nil)
+  def initialize(context, heading_level = 0, show_hash = false, show_pages = true, hyperlink_all = false, markup = nil)
     super(heading_level, markup)
 
     @context           = context
     @show_hash         = show_hash
+    @show_pages        = show_pages
     @hyperlink_all     = hyperlink_all
     @crossref_resolver = RDoc::CrossReference.new(@context)
     
@@ -170,7 +171,7 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
     if resolved_name.kind_of?(String)
       escape(resolved_name).gsub("::", "\\-::")
     else #Some RDoc::CodeObject sublass instance
-      if RDoc::RDoc.current.options.show_pages
+      if @show_pages
         "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name).gsub("::", "\\-::")}} \\nolinebreak[2][p.~\\pageref{#{resolved_name.latex_label}}]"
       else
         "\\hyperref[#{resolved_name.latex_label}]{#{escape(display_name).gsub("::", "\\-::")}}"
