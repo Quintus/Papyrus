@@ -26,7 +26,7 @@ Install it via:
 If you prefer to be on the bleeding edge, clone the sourcecode
 repository and build the gem yourself:
 
-  $ git clone https://github.com/Quintus/rdoc_pdf-latex.git
+  $ git clone http://git.pegasus-alpha.eu/papyrus.git
   $ rake gem
   # gem install --local --pre pkg/papyrus-x.y.z
 
@@ -80,8 +80,8 @@ The PDF generator adds some commandline options to RDoc, namely:
 
 == Web pages
 
-* The sourcecode is hosted at GitHub: https://github.com/Quintus/rdoc_pdf-latex
-* Report bugs at: https://github.com/Quintus/rdoc_pdf-latex/issues
+* The project is hosted here: http://redmine.pegasus-alpha.eu/projects/papyrus
+* Report bugs at: http://redmine.pegasus-alpha.eu/projects/papyrus/issues
 
 == Known Problems
 
@@ -92,9 +92,9 @@ The PDF generator adds some commandline options to RDoc, namely:
 == Author
 
 This software was written by Marvin Gülker for the German company
-of {Pegasus Alpha}[http://pegasus-alpha.de], which disclaims all
-interest on the RDoc PDF LaTeX plugin. You can contact me at
-m-guelker ÄT pegasus-alpha DÖT de.
+of {Pegasus Alpha}[http://pegasus-alpha.eu], which disclaims all
+interest on Papyrus. You can contact me at
+m-guelker ÄT pegasus-alpha DÖT eu.
 
 == Thanks
 
