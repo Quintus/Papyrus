@@ -62,7 +62,8 @@ GEMSPEC = Gem::Specification.new do |spec|
   spec.description = PROJECT_DESC
   spec.version = RDoc::Generator::Papyrus::VERSION.gsub("-", ".")
   spec.author = "Marvin Gülker"
-  spec.email = "m-guelker@pegasus-alpha.de"
+  spec.email = "m-guelker@pegasus-alpha.eu"
+  spec.homepage = "http://redmine.pegasus-alpha.eu/projects/papyrus"
   spec.platform = Gem::Platform::RUBY
   spec.required_ruby_version = ">= 1.9"
   spec.add_dependency("rdoc", ">= 3.9.1")
