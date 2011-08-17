@@ -1,33 +1,33 @@
 # -*- coding: utf-8 -*-
 #
-#This file is part of RDoc PDF LaTeX.
-#
-#RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
-#Copyright © 2011  Pegasus Alpha
-#
-#RDoc PDF LaTeX is free software; you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation; either version 2 of the License, or
-#(at your option) any later version.
-#
-#RDoc PDF LaTeX is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#
-#You should have received a copy of the GNU General Public License
-#along with RDoc PDF LaTeX; if not, write to the Free Software
-#Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# This file is part of Papyrus.
+# 
+# Papyrus is a RDoc plugin for generating PDF files.
+# Copyright © 2011  Pegasus Alpha
+# 
+# Papyrus is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# Papyrus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Papyrus; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #
 module RDoc
 
   module Generator
 
-    class PDF_LaTeX
+    class Papyrus
       
       #Mixin module that is used to extend the RDoc::Options
-      #instance given to RDoc::Generator::PDF_LaTeX.setup_options
+      #instance given to RDoc::Generator::Papyrus.setup_options
       #to arrange for some new options specific to the PDF
       #generator.
       module Options

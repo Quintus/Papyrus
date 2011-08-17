@@ -1,25 +1,23 @@
 # -*- coding: utf-8 -*-
-
-=begin
-This file is part of RDoc PDF LaTeX.
-
-RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
-Copyright © 2011  Pegasus Alpha
-
-RDoc PDF LaTeX is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-RDoc PDF LaTeX is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with RDoc PDF LaTeX; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-=end
+# 
+# This file is part of Papyrus.
+# 
+# Papyrus is a RDoc plugin for generating PDF files.
+# Copyright © 2011  Pegasus Alpha
+# 
+# Papyrus is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# Papyrus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Papyrus; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 gem "rdoc", ">= 3"
 require "rake"
@@ -27,17 +25,17 @@ require "rake/clean"
 require "rake/testtask"
 require "rdoc/task"
 require "rubygems/package_task"
-require_relative "lib/rdoc/generator/pdf_latex"
+require_relative "lib/rdoc/generator/papyrus"
 
 #The project’s title as it appears in the docs.
-PROJECT_TITLE = "LaTeX-PDF generator for RDoc"
+PROJECT_TITLE = "Papyrus--LaTeX-PDF generator for RDoc"
 #The project’s name, to be used for the gem name
-PROJECT_NAME = "rdoc_pdf-latex"
+PROJECT_NAME = "papyrus"
 #A one-line summary of the project, used for the gem summary
-PROJECT_SUMMARY = "PDF generator plugin for RDoc"
+PROJECT_SUMMARY = "PDF generator plugin for RDoc, based on LaTeX"
 #A full description of the whole thing
 PROJECT_DESC =<<DESC
-RDoc PDF LaTeX is a PDF generator plugin for RDoc based on LaTeX. It
+Papyrus is a PDF generator plugin for RDoc based on LaTeX. It
 allows you to turn your project's documentation into a nice PDF file
 instead of the usual HTML output.
 DESC
@@ -62,7 +60,7 @@ GEMSPEC = Gem::Specification.new do |spec|
   spec.name = PROJECT_NAME
   spec.summary = PROJECT_SUMMARY
   spec.description = PROJECT_DESC
-  spec.version = RDoc::Generator::PDF_LaTeX::VERSION.gsub("-", ".")
+  spec.version = RDoc::Generator::Papyrus::VERSION.gsub("-", ".")
   spec.author = "Marvin Gülker"
   spec.email = "m-guelker@pegasus-alpha.de"
   spec.platform = Gem::Platform::RUBY
@@ -114,7 +112,7 @@ desc "Rebuild the HTML docs."
 task :rerdoc_html => [:clobber_rdoc, :rdoc_html]
 
 RDoc::Task.new do |r|
-  r.generator = "pdf_latex"
+  r.generator = "papyrus"
   r.rdoc_files.include("lib/**/*.rb", "**/*.rdoc", "README.rdoc", "COPYING")
   r.title = PROJECT_TITLE
   r.main = "README.rdoc"

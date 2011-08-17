@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
-=begin
-This file is part of RDoc PDF LaTeX.
-
-RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
-Copyright © 2011  Pegasus Alpha
-
-RDoc PDF LaTeX is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-RDoc PDF LaTeX is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with RDoc PDF LaTeX; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-=end
+#
+# This file is part of Papyrus.
+# 
+# Papyrus is a RDoc plugin for generating PDF files.
+# Copyright © 2011  Pegasus Alpha
+# 
+# Papyrus is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# Papyrus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Papyrus; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 require "fileutils"
 require "pathname"
@@ -27,9 +26,9 @@ require "open3"
 gem "rdoc"
 require "rdoc/rdoc"
 require "rdoc/generator"
-require_relative "pdf_latex/options" #Rest required in #initialize
+require_relative "papyrus/options" #Rest required in #initialize
 
-#This is the main class for the PDF generator for RDoc. It takes
+#This is the main class for the Papyrus PDF generator for RDoc. It takes
 #RDoc’s raw parsed data and transforms it into a single PDF file
 #backed by pdfLaTeX. If you’re interested in how this process works,
 #feel free to dig into this class’ code, but ensure you also have
@@ -41,7 +40,7 @@ require_relative "pdf_latex/options" #Rest required in #initialize
 #
 #1. During startup, RDoc calls the ::setup_options method that adds
 #   some commandline options to RDoc (these are described in the
-#   RDoc::Generator::PDF_LaTeX::Options module).
+#   RDoc::Generator::Papyrus::Options module).
 #2. RDoc parses the source files.
 #3. RDoc calls the #generate method and passes it all encountered
 #   files as an array of RDoc::TopLevel objects.
@@ -62,10 +61,10 @@ require_relative "pdf_latex/options" #Rest required in #initialize
 #   that contains a link to the PDF file. This allows navigating to the
 #   documentation via RubyGems’ server (if somebody really set his
 #   default generator to +pdf_latex+...).
-class RDoc::Generator::PDF_LaTeX
+class RDoc::Generator::Papyrus
 
   #Generic exception class for this library.
-  class PDF_LaTeX_Error < StandardError
+  class PapyrusError < StandardError
   end
   
   RDoc::RDoc.add_generator(self) #Tell RDoc about the new generator
@@ -127,18 +126,18 @@ class RDoc::Generator::PDF_LaTeX
     def setup_options(options)
       debug("Teaching new options to RDoc")
       #Define the methods to get and set the options
-      options.extend(RDoc::Generator::PDF_LaTeX::Options)
+      options.extend(RDoc::Generator::Papyrus::Options)
 
       #Define the options themselves
       options.option_parser.on("--[no-]show-pages", "(pdf_latex) Enables or disables page", "numbers following hyperlinks (default true).") do |val|
         debug("Found --show-pages: #{val}")
         options.show_pages = val
       end
-      options.option_parser.on("--latex-command=VALUE", "(pdf_latex) Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_LATEX_COMMAND}')") do |val|
+      options.option_parser.on("--latex-command=VALUE", "(pdf_latex) Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_LATEX_COMMAND}')") do |val|
         debug("Found --latex-command: #{val}")
         options.latex_command = val
       end
-      options.option_parser.on("--babel-lang=VALUE", "(pdf_latex) Sets the language option", "for babel (defaults to '#{RDoc::Generator::PDF_LaTeX::Options::DEFAULT_BABEL_LANG}')") do |val|
+      options.option_parser.on("--babel-lang=VALUE", "(pdf_latex) Sets the language option", "for babel (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_BABEL_LANG}')") do |val|
         debug("Found --babel-lang: #{val}")
         options.babel_lang = val
       end
@@ -152,7 +151,7 @@ class RDoc::Generator::PDF_LaTeX
     #does nothing.
     def debug(str = nil)
       if $DEBUG_RDOC
-        puts "[pdf_latex] #{str}" if str
+        puts "[papyrus] #{str}" if str
         yield if block_given?
       end
     end
@@ -242,7 +241,7 @@ class RDoc::Generator::PDF_LaTeX
   end
   
   #Runs the LaTeX command with the specified +opts+, which will be quoted
-  #by this method. Raises PDF_LaTeX_Error if the +pdflatex+ command (or
+  #by this method. Raises PapyrusError if the +pdflatex+ command (or
   #the command named on the commandline) wasn't found. This exception
   #is also raised if something goes wrong when calling LaTeX.
   def latex(*opts)
@@ -259,12 +258,12 @@ class RDoc::Generator::PDF_LaTeX
         
         e = thread.value.exitstatus
         unless e == 0
-          raise(PDF_LaTeX_Error, "Invoking #{@options.latex_command} failed with exitstatus #{e}!")
+          raise(PapyrusError, "Invoking #{@options.latex_command} failed with exitstatus #{e}!")
         end
       end
     end
   rescue Errno::ENOENT => e
-    raise(PDF_LaTeX_Error, "LaTeX not found -- original error was: #{e.class} -- #{e.message}")
+    raise(PapyrusError, "LaTeX not found -- original error was: #{e.class} -- #{e.message}")
   end
 
   #Renders the given RDoc::ClassModule into a TeX file and returns the

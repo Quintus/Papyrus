@@ -1,9 +1,9 @@
-= PDF Generator for RDoc (based on LaTeX)
+= Papyrus--a PDF Generator for RDoc (based on LaTeX)
 
 This library is a plugin for Ruby’s documentation generator
 RDoc[http://github.com/rdoc/rdoc]. It provides both a generator for
 outputting PDF (Portable document format) (the
-RDoc::Generator::PDF_LaTeX class) files and a formatter for
+RDoc::Generator::Papyrus class) files and a formatter for
 turning the parsed RDoc markup into LaTeX code
 (RDoc::Markup::ToLaTeX; RDoc::Markup::ToLaTeX_Crossref adds
 cross-reference facilities).
@@ -18,39 +18,40 @@ cross-reference facilities).
 
 == Installation
 
-RDoc PDF LaTeX is available via RubyGems[http://rubygems.org].
+Papyrus is available via RubyGems[http://rubygems.org].
 Install it via:
 
-  # gem install rdoc_pdf-latex
+  # gem install papyrus
 
 If you prefer to be on the bleeding edge, clone the sourcecode
 repository and build the gem yourself:
 
-  $ git clone http://git.github.com/Quintus/rdoc_pdf-latex
+  $ git clone https://github.com/Quintus/rdoc_pdf-latex.git
   $ rake gem
-  # gem install --local --pre pkg/rdoc_pdf-latex-x.y.z
+  # gem install --local --pre pkg/papyrus-x.y.z
 
 == Usage
 
 To use it from the commandline, pass RDoc the <tt>-f</tt>
-commandline switch specifying "pdf_latex":
+commandline switch specifying "papyrus":
 
-  $ rdoc -f pdf_latex
+  $ rdoc -f papyrus
 
 You may also set this permantently in your +RDOCOPT+ environment
-variable.
+variable (although I don’t recommand this--all the gems you 
+install will get PDF documentation then).
 
 The other way is to use the library from within a Ruby
 program. Require it via:
 
-  gem "rdoc", ">= 3.9" #Won’t work with any RDoc < 3.9
-  require "rdoc/generator/pdf"
+  gem "rdoc" #Won’t work with any RDoc < 3.9
+  require "rdoc/generator/papyrus"
 
 and then do
 
   opts = RDoc::Options.new
-  #Specify your options...
-  opts.generator = RDoc::Generator::PDF_LaTeX
+  # Specify your options...
+  opts.generator = RDoc::Generator::Papyrus
   RDoc::RDoc.new.document(opts)
 
 In both cases you’ll find a file <tt>Documentation.pdf</tt>
@@ -105,7 +106,7 @@ him, this plugin wouldn’t have made it into a releasable state.
 
 == License
 
-RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
+Papyrus is a RDoc plugin for generating PDF files.
 
 Copyright © 2011  Pegasus Alpha
 

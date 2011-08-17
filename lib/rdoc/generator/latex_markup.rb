@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
-#This file is part of RDoc PDF LaTeX.
 #
-#RDoc PDF LaTeX is a RDoc plugin for generating PDF files.
-#Copyright © 2011  Pegasus Alpha
-#
-#RDoc PDF LaTeX is free software; you can redistribute it and/or modify
-#it under the terms of the GNU General Public License as published by
-#the Free Software Foundation; either version 2 of the License, or
-#(at your option) any later version.
-#
-#RDoc PDF LaTeX is distributed in the hope that it will be useful,
-#but WITHOUT ANY WARRANTY; without even the implied warranty of
-#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#GNU General Public License for more details.
-#
-#You should have received a copy of the GNU General Public License
-#along with RDoc PDF LaTeX; if not, write to the Free Software
-#Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# This file is part of Papyrus.
+# 
+# Papyrus is a RDoc plugin for generating PDF files.
+# Copyright © 2011  Pegasus Alpha
+# 
+# Papyrus is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# Papyrus is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with Papyrus; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #Mixin module mixed into RDoc::CodeObject subclasses in order
 #to overwrite RDoc’s standard RDoc::Generator::Markup mixin module that
@@ -32,14 +33,14 @@ module RDoc::Generator::LaTeX_Markup
   #A string (hopefully) uniquely identifying this CodeObject. Intended for
   #use as the reference in a <tt>\href</tt> command.
   #==Raises
-  #[PDF_LaTeX_Error] +self+ isn’t a CodeObject (→ Context::Section).
+  #[PapyrusError] +self+ isn’t a CodeObject (→ Context::Section).
   def latex_label
     case self
     when RDoc::Context then "class-module-#{full_name}"
     when RDoc::MethodAttr then "method-attr-#{full_name.gsub('#', '+')}" # '#' doesn’t work in references
     when RDoc::Constant then "const-#{parent.full_name}::#{name}"
     else
-      raise(RDoc::Generator::PDF_LaTeX::PDF_LaTeX_Error, "Unrecognized token: #{self.inspect}!")
+      raise(RDoc::Generator::Papyrus::PapyrusError, "Unrecognized token: #{self.inspect}!")
     end
   end
 
