@@ -34,9 +34,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \usepackage[<%= babel_lang %>]{babel} %Hyphenation, etc.
-\usepackage[utf8]{inputenc} %Input encoding: UTF-8
-\usepackage[T1]{fontenc} %Output encoding: T1
-\usepackage{lmodern} %Pretty fonts for T1
+%\usepackage[utf8]{inputenc} %Input encoding: UTF-8
+%\usepackage[T1]{fontenc} %Output encoding: T1
+%\usepackage{lmodern} %Pretty fonts for T1
+\usepackage{fontspec}
 \usepackage{textcomp} %Useful things like \textdegree
 \usepackage[official]{eurosym} %Official \euro symbol
 \usepackage{lastpage} %Get a reference on the last page
@@ -52,7 +53,7 @@
 %\usepackage{graphicx} %Graphics
 \usepackage{titlesec} %Easily define new heading styles
 \usepackage{titletoc} %For telling LaTeX where to put the new headings in the TOC
-\usepackage[unicode=true,pdftex]{hyperref} %For hyperlinks
+\usepackage[unicode=true,xetex]{hyperref} %For hyperlinks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General information
