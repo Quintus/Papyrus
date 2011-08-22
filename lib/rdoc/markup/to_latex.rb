@@ -190,7 +190,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     /(?<!textbackslash){/  => "\\{",
     /(?<!textbackslash{)}/ => "\\}",
     /_/     => "\\textunderscore{}",
-    /\.{3}/ => "\\ldots",
+    /\.{3}/ => "\\ldots{}",
     /~/     => "\\~",
     /©/     => "\\copyright{}",
     /LaTeX/ => "\\LaTeX{}"
