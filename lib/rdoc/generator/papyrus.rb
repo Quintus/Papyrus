@@ -321,7 +321,7 @@ class RDoc::Generator::Papyrus
   #a \hyperref to it if possible. Otherwise just returns +obj+.
   def superclass_string(obj)
     if obj.kind_of?(String)
-      obj
+      RDoc::Markup::ToLaTeX.new.escape(obj) #HACK, \verb doesn't do the trick here
     else
       hyperref(obj.latex_label, obj.latexized(:full_name))
     end
@@ -333,6 +333,7 @@ class RDoc::Generator::Papyrus
     table_str = ""
     table_str << "\\small"
     table_str << "\\begin{longtable}{l|l|l|l|l|l}\n"
+    #table_str << "\\begin{longtable}{p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}}\n"
     table_str << "  \\bfseries Name & \\bfseries p & \\bfseries Name & \\bfseries p & \\bfseries Name & \\bfseries p \\\\\n"
     table_str << "  \\hline\n"
     table_str << "\\endhead\n"
