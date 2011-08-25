@@ -90,7 +90,7 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
   end
 
   def accept_paragraph_plus
-    assert_equal("reg \\texttt{teletype} reg\n", @to.result)
+    assert_equal("reg \\verb~teletype~ reg\n", @to.result)
   end
 
   def accept_paragraph_star
@@ -203,7 +203,7 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
   def accept_list_item_start_note_2
     expect =<<-EX
 \\begin{description}
-\\item[\\texttt{teletype}:] teletype description
+\\item[\\verb~teletype~:] teletype description
 \\end{description}
     EX
     assert_equal(expect, @to.result)

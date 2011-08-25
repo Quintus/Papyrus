@@ -14,12 +14,10 @@ cross-reference facilities).
   Version 1.9.2 or greater required.
 * RDoc[http://github.com/rdoc/rdoc], the Ruby documentation tool, version 3.9 or greater.
 * The generator uses LaTeX[http://latex-project.org] to generate the PDF files
-  (pdfLaTeX, to be exact), so you’ll need this as well. LaTeX2e required.
+  (XeLaTeX, to be exact), so you’ll need this as well. LaTeX2e required.
 * In addition to LaTeX itself, the following LaTeX packages need to be
   installed:
-  * inputenc
-  * fontenc
-  * lmodern
+  * fontspec
   * textcomp
   * eurosym
   * lastpage
@@ -32,7 +30,7 @@ cross-reference facilities).
   * titletoc
   * hyperref
   If any of these is missing, you'll get that obscure
-    Invoking pdflatex failed with exitstatus 1!
+    Invoking xelatex failed with exitstatus 1!
   message. To see which was the cause for this error, you can
   pass the <tt>--debug</tt> option to RDoc as in:
     rdoc -f papyrus --debug WHATEVERYOUWANTTODOCUMENT
@@ -48,6 +46,7 @@ If you prefer to be on the bleeding edge, clone the sourcecode
 repository and build the gem yourself:
 
   $ git clone http://git.pegasus-alpha.eu/papyrus.git
+  $ git checkout devel
   $ rake gem
   # gem install --local --pre pkg/papyrus-x.y.z
 
@@ -89,8 +88,8 @@ The PDF generator adds some commandline options to RDoc, namely:
   you may turn them off via <tt>--no-show-pages</tt>. Defaults
   to true.
 [<tt>--latex-command</tt>]
-  If your pdfLaTeX’s executable for whatever reason isn’t named
-  +pdflatex+ (the default), you can set the name here.
+  If your XeLaTeX’s executable for whatever reason isn’t named
+  +xelatex+ (the default), you can set the name here.
 [<tt>--babel-lang</tt>]
   If you write your documentation in a language other than English,
   this option may be interesting for you. It specified the option(s)
