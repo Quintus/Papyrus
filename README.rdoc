@@ -15,6 +15,27 @@ cross-reference facilities).
 * RDoc[http://github.com/rdoc/rdoc], the Ruby documentation tool, version 3.9 or greater.
 * The generator uses LaTeX[http://latex-project.org] to generate the PDF files
   (pdfLaTeX, to be exact), so you’ll need this as well. LaTeX2e required.
+* In addition to LaTeX itself, the following LaTeX packages need to be
+  installed:
+  * inputenc
+  * fontenc
+  * lmodern
+  * textcomp
+  * eurosym
+  * lastpage
+  * geometry
+  * fancyhdr
+  * fancyvrb
+  * longtable
+  * xcolor
+  * titlesec
+  * titletoc
+  * hyperref
+  If any of these is missing, you'll get that obscure
+    Invoking pdflatex failed with exitstatus 1!
+  message. To see which was the cause for this error, you can
+  pass the <tt>--debug</tt> option to RDoc as in:
+    rdoc -f papyrus --debug WHATEVERYOUWANTTODOCUMENT
 
 == Installation
 
@@ -88,6 +109,27 @@ The PDF generator adds some commandline options to RDoc, namely:
 * No cross-referencing inside headings and the labels of labeled lists.
   This is a technical restriction as the complex references this
   template creates confuse LaTeX when used in that places.
+
+== When it crashes
+
+Before you report a bug against Papyrus (see above) you should
+check wheather it's really Papyrus' fault or your setup's. 
+Installing LaTeX can be a tricky task, so make sure everything
+is where it ought to be. You should also try to run rdoc with the
+<tt>--debug</tt> option which will turn on RDoc's and Papyrus'
+debug mode. Using this can cause masses of output, so be prepared.
+Usually you'll find something like
+
+  ! LaTeX error: ...
+
+somewhere in the output--this will tell you what went wrong.
+
+If you're sure you've found some misbehaviour in Papyrus (which
+is totally legit as we're all human beings that tend to make
+mistakes) use the bugtracker pointed to above and include the
+output of a debug run along with your Ruby and RDoc version. 
+Please also attach a description on what you did and (if useful)
+what you expected Papyrus to do.
 
 == Author
 

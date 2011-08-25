@@ -91,32 +91,6 @@ class RDoc::Generator::Papyrus
   #temporary directory.
   MAIN_FILE_RESULT_BASENAME = "main.pdf"
 
-  #Creates a new instance of this class. Automatically called by RDoc.
-  #There shouldn’t be any need for you to call this.
-  #==Parameter
-  #[options] RDoc passes the current RDoc::Options instance here.
-  #==Return value
-  #The newly created instance.
-  def initialize(options)
-    #The requiring of the rest of the library *must* be placed here,
-    #because otherwise it’s loaded during RDoc’s discovering process,
-    #effectively eliminating the possibility to generate anything
-    #other than LaTeX output due to the overwrites the
-    #RDoc::Generator::LaTeX_Markup module does.
-    require_relative "../markup/to_latex_crossref"
-    require_relative "latex_markup"
-    
-    @options = options
-    @output_dir = Pathname.pwd.expand_path + @options.op_dir
-    #The following variable is used to generate unique filenames.
-    #During processing the ERB templates, many files are created and
-    #accidentally creating two files with the same name, effectively
-    #overwriting the previous one, should be avoided. Hence, this
-    #little number is prepended to generated filenames (except the
-    #main file).
-    @counter = 0
-  end
-
   class << self
 
     #Called by RDoc during option processing. Adds commandline
@@ -156,6 +130,32 @@ class RDoc::Generator::Papyrus
       end
     end
 
+  end
+
+  #Creates a new instance of this class. Automatically called by RDoc.
+  #There shouldn’t be any need for you to call this.
+  #==Parameter
+  #[options] RDoc passes the current RDoc::Options instance here.
+  #==Return value
+  #The newly created instance.
+  def initialize(options)
+    #The requiring of the rest of the library *must* be placed here,
+    #because otherwise it’s loaded during RDoc’s discovering process,
+    #effectively eliminating the possibility to generate anything
+    #other than LaTeX output due to the overwrites the
+    #RDoc::Generator::LaTeX_Markup module does.
+    require_relative "../markup/to_latex_crossref"
+    require_relative "latex_markup"
+    
+    @options = options
+    @output_dir = Pathname.pwd.expand_path + @options.op_dir
+    #The following variable is used to generate unique filenames.
+    #During processing the ERB templates, many files are created and
+    #accidentally creating two files with the same name, effectively
+    #overwriting the previous one, should be avoided. Hence, this
+    #little number is prepended to generated filenames (except the
+    #main file).
+    @counter = 0
   end
 
   #Called by RDoc after parsing has happened in order to generate the output.
