@@ -235,7 +235,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
     #Add definitions for inline markup
     add_tag(:BOLD, "\\textbf{", "}")
-    add_tag(:TT, "\\texttt{", "}")
+    add_tag(:TT, "\\verb~", "~")
     add_tag(:EM, "\\textit{", "}")
   end
   

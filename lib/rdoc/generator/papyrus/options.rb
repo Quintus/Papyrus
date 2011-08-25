@@ -35,7 +35,7 @@ module RDoc
         #The default command invoked when running LaTeX.
         #Overriden by the <tt>--latex-command</tt> commandline
         #option.
-        DEFAULT_LATEX_COMMAND = "pdflatex"
+        DEFAULT_LATEX_COMMAND = "xelatex"
 
         #The default language option passed to the LaTeX +babel+
         #package.
