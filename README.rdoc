@@ -100,8 +100,10 @@ The PDF generator adds some commandline options to RDoc, namely:
 
 == Web pages
 
-* The project is hosted here: http://redmine.pegasus-alpha.eu/projects/papyrus
-* Report bugs at: http://redmine.pegasus-alpha.eu/projects/papyrus/issues
+* The project is hosted here: http://devel.pegasus-alpha.eu/projects/papyrus
+* Report bugs at: http://devel.pegasus-alpha.eu/projects/papyrus/issues
+* The Git repository can be seen here: http://devel.pegasus-alpha.eu/projects/papyrus/repository
+* The Git repository is mirrored to GitHub: https://github.com/Quintus/Papyrus
 
 == Known Problems
 
