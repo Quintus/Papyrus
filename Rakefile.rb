@@ -55,6 +55,10 @@ PROJECT_REQUIREMENTS = [
                         "(pdf)LaTeX2e: For the actual PDF generation."
                         ]
 
+#List of projects to document in the :document_test task
+TEST_PROJECTS = %w[activerecord]
+TEST_PROJECTS_DIR = "test/gems"
+
 #The gem specification
 GEMSPEC = Gem::Specification.new do |spec|
   spec.name = PROJECT_NAME
@@ -81,7 +85,7 @@ Gem::PackageTask.new(GEMSPEC).define
 #documentation.
 TMP_DOC_DIR = "tmp"
 
-CLEAN.include(TMP_DOC_DIR)
+CLEAN.include(TMP_DOC_DIR, TEST_PROJECTS_DIR)
 ENV["RDOCOPT"] = nil #Needed to override my "-f hanna" default
 
 desc "Generate RDoc documentation in HTML format."
@@ -131,3 +135,32 @@ end
 
 desc "Runs the PDF generation in debug mode."
 task :rdoc_debug => [:clobber_rdoc, :rdoc_set_debug, :rdoc]
+
+desc "Documents some bigger projects with papyrus."
+task :document_test do
+  prev_dir = Dir.pwd
+  mkdir_p TEST_PROJECTS_DIR
+  cd TEST_PROJECTS_DIR
+  
+  TEST_PROJECTS.each do |gemname|
+    recent_version = `gem list #{gemname} -r`.lines.first.match(/\((.*)\)/)[1]
+    full_name = "#{gemname}-#{recent_version}"
+    puts "Documenting #{full_name}..."
+    
+    sh "gem fetch #{gemname}"
+    sh "gem unpack #{full_name}.gem"
+    cd full_name
+
+    main_page = nil
+    %w[README README.txt README.rdoc].each{|f| main_page = f if File.file?(f)}
+    args = %w[-f papyrus -o papyrus-doc --debug]
+    args += %w[-m] + [main_page] if main_page
+    args += %w[lib ext] + Dir["*.rdoc"]
+    rdoc = RDoc::RDoc.new
+    puts "rdoc #{args.join(' ')}"
+    rdoc.document(args)
+
+    cd ".."
+  end
+  cd prev_dir
+end
