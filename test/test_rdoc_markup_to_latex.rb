@@ -283,5 +283,31 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
     assert_equal("\\microsection*{Hello}\n", f4.convert("=Hello"))
     assert_equal("\\paragraph*{Hello.} \n", f4.convert("==Hello"))
   end
+
+  def test_verbatim_headings
+    f1 = RDoc::Markup::ToLaTeX.new(1)
+    f4 = RDoc::Markup::ToLaTeX.new(4)
+
+    expected =<<-EOF
+\\SaveVerb{verb0}~This is verbatim 0.~
+\\subsection[Verbatim text: This is verbatim 0.]{Verbatim text: \\protect\\UseVerb{verb0}}
+    EOF
+    assert_equal(expected, f1.convert("=Verbatim text: <tt>This is verbatim 0.</tt>"))
+
+    input=<<-EOF
+== Test1: +verbatim+
+Foo bar baz
+== Test2: <tt>Verbatim } % _ 2</tt>
+    EOF
+    
+    expected =<<-EOF
+\\SaveVerb{verb0}~verbatim~
+\\paragraph*{Test1: \\protect\\UseVerb{verb0}.} 
+Foo bar baz
+\\SaveVerb{verb1}~Verbatim } % _ 2~
+\\paragraph*{Test2: \\protect\\UseVerb{verb1}.} 
+  EOF
+    assert_equal(expected, f4.convert(input))
+  end
   
 end

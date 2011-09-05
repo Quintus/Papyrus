@@ -176,6 +176,15 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
                     "\\subparagraph*{%s}",       #Needed??
                     "%s", "%s", "%s", "%s", "%s", "%s"].freeze #Everything below is just ignored.
 
+  #LaTeX heading commands for headings with an optional
+  #argument to change the TOC entry. Just reach till level 4,
+  #because lower headings don’t show up in the TOC at all.
+  LATEX_OPT_HEADINGS = [nil,
+                        "\\section[%s]{%s}",
+                        "\\subsection[%s]{%s}",
+                        "\\subsubsection[%s]{%s}",
+                        "\\subsubsubsection[%s]{%s}"
+                        ]
   #Characters that need to be escaped for LaTeX and their
   #corresponding escape sequences. Note the order if important,
   #otherwise some things (especiallaly \ and {}) are escaped
@@ -310,7 +319,31 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds a fitting \section, \subsection, etc. for the heading.
   def accept_heading(head)
-    @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], to_latex_suppress_crossref(head.text)) << "\n"
+    @save_verb_index ||= 0 #Variable just used for this method
+    inline = to_latex_suppress_crossref(head.text)
+    
+    #Verbatim text inside headings is one of LaTeX’s ways to hell.
+    #We need to take special care of this by means of fancyvrb’s
+    #\SaveVerb command plus suppressing the verbatim inside the TOC.
+    save_verbs  = ""
+    save_inline = inline.gsub(/\\verb~(.*?)~/) do
+      save_verbs << "\\SaveVerb{verb#{@save_verb_index}}~#$1~\n"
+      str = "\\protect\\UseVerb{verb#{@save_verb_index}}"
+      @save_verb_index += 1
+      str #for gsub
+    end
+    
+    if save_verbs.empty?
+      @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], inline) << "\n"
+    else #OK, some fool must have verbatim in the heading...
+      @result << save_verbs
+      heading = LATEX_OPT_HEADINGS[@heading_level + head.level]
+      if heading
+        @result << sprintf(heading, inline.gsub(/\\verb~(.*?)~/){escape($1)}, save_inline) << "\n"
+      else #Heading not in TOC
+        @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], save_inline) << "\n"
+      end
+    end
   end
 
   #Writes the raw thing as-is into the document. 
@@ -326,7 +359,11 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #Called for each plaintext string in a paragraph by
   #the #convert_flow method called in #to_latex.
   def convert_string(str)
-    escape(str)
+    if in_tt?
+      str
+    else
+      escape(str)
+    end
   end
   
   #Method copied from RDoc project and slightly modified.
