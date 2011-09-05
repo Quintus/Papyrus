@@ -173,8 +173,10 @@ class RDoc::Generator::Papyrus
     debug("Found #{@rdoc_files.count} toplevels ending in .rdoc that will be processed")
     if @options.main_page #nil if not set, no main page
       main_index = @rdoc_files.index{|t| t.full_name == @options.main_page}
-      @rdoc_files.unshift(@rdoc_files.slice!(main_index))
-      debug("Main page is #{@rdoc_files.first.name}")
+      if main_index #nil if invalid main_page given
+        @rdoc_files.unshift(@rdoc_files.slice!(main_index))
+        debug("Main page is #{@rdoc_files.first.name}")
+      end
     end
 
     #Get the class, module and methods lists, sorted alphabetically by their full names
@@ -229,8 +231,10 @@ class RDoc::Generator::Papyrus
     #Remove the temporary directory (this is *not* done if invoking LaTeX
     #failed, as the #latex method throws an exception. This is useful for
     #debugging the generated LaTeX files)
-    debug("Removing temporary directory")
-    temp_dir.rmtree unless @options.dry_run
+    unless $DEBUG_RDOC
+      debug("Removing temporary directory")
+      temp_dir.rmtree unless @options.dry_run
+    end
   end
 
   private
