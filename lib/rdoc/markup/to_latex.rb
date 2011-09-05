@@ -293,11 +293,14 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #Adds \item[label_if_necessary].
   def accept_list_item_start(item)
     if item.label
+      #Verbatim inside list labels is dangerous!
+      hsh = save_verbs(item.label)
+      @result << hsh[:save_verbs]
       
       if @list_in_progress == :NOTE
-        @result << "\\item[#{to_latex_suppress_crossref(item.label)}:] " #Newline done by ending paragraph
+        @result << "\\item[#{hsh[:save_inline]}:] " #Newline done by ending paragraph
       else
-        @result << "\\item[#{to_latex_suppress_crossref(item.label)}] " #Newline done by ending paragraph
+        @result << "\\item[#{hsh[:save_inline]}] " #Newline done by ending paragraph
       end
     else
       @result << "\\item " #Newline done by ending method
@@ -319,29 +322,20 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds a fitting \section, \subsection, etc. for the heading.
   def accept_heading(head)
-    @save_verb_index ||= 0 #Variable just used for this method
-    inline = to_latex_suppress_crossref(head.text)
-    
     #Verbatim text inside headings is one of LaTeX’s ways to hell.
     #We need to take special care of this by means of fancyvrb’s
     #\SaveVerb command plus suppressing the verbatim inside the TOC.
-    save_verbs  = ""
-    save_inline = inline.gsub(/\\verb~(.*?)~/) do
-      save_verbs << "\\SaveVerb{verb#{@save_verb_index}}~#$1~\n"
-      str = "\\protect\\UseVerb{verb#{@save_verb_index}}"
-      @save_verb_index += 1
-      str #for gsub
-    end
+    hsh = save_verbs(head.text)
     
-    if save_verbs.empty?
-      @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], inline) << "\n"
+    if hsh[:save_verbs].empty?
+      @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], hsh[:save_inline]) << "\n"
     else #OK, some fool must have verbatim in the heading...
-      @result << save_verbs
+      @result << hsh[:save_verbs]
       heading = LATEX_OPT_HEADINGS[@heading_level + head.level]
       if heading
-        @result << sprintf(heading, inline.gsub(/\\verb~(.*?)~/){escape($1)}, save_inline) << "\n"
+        @result << sprintf(heading, hsh[:plain_inline], hsh[:save_inline]) << "\n"
       else #Heading not in TOC
-        @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], save_inline) << "\n"
+        @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], hsh[:save_inline]) << "\n"
       end
     end
   end
@@ -431,6 +425,35 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
       "\\url{#{url}}"
     end
   end
+
+  #Finds all \verb commands in +text+ and replaces them with
+  #fancyvrb’s super-secure \SaveVerb-\UseVerb mechanism. Returns
+  #a hash of form
+  #  {:save_verbs => str1, :save_inline => str2, :plain_inline => str3}
+  #where the :save_inline string contains \UseVerb commands
+  #making use of the \SaveVerb commands issued in the
+  #:save_verbs string (the latter being empty if no replacements
+  #were made). If replacements were made, :save_verbs ends in a
+  #newline character.
+  #
+  #+text+ is automatically markup up, but without cross-references,
+  #because where \verb is fragile, cross-references usually are as well.
+  #
+  #:plain_inline contains the marked-up string with all \verb commands
+  #just removed and replaced with their (LaTeX-escaped) text.
+  def save_verbs(text)
+    @save_verb_index ||= 0 #Variable just used for this method
+    saves  = ""
+    inline = to_latex_suppress_crossref(text)
+
+    save_inline = inline.gsub(/\\verb~(.*?)~/) do
+      saves << "\\SaveVerb{verb#{@save_verb_index}}~#$1~\n"
+      str = "\\protect\\UseVerb{verb#{@save_verb_index}}"
+      @save_verb_index += 1
+      str #for gsub
+    end
+
+    {:save_verbs => saves, :save_inline => save_inline, :plain_inline => inline.gsub(/\\verb~(.*?)~/){escape($1)}}
+  end
   
 end
-
