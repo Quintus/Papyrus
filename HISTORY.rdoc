@@ -1,0 +1,15 @@
+= History of Papyrus
+
+This file describes the most important changes made to Papyrus between
+two releases. For a comprehensive list, see the 
+{source archive}[http://devel.pegasus-alpha.eu/projects/papyrus/repository].
+
+Bug fixes are written in <i>italic</i>, important changes in
+<b>bold</b>.
+
+== Next version
+
+* <b>Switched to XeTeX as the underlying engine instead of
+  pdfLaTeX</b>
+* Fixed handling of verbatim text inside headings and description
+  lists
