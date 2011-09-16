@@ -72,17 +72,22 @@ class RDoc::Generator::Papyrus
   #Description displayed in RDoc’s help.
   DESCRIPTION = "PDF generator based on LaTeX"
 
+  #Root directory of this project.
+  ROOT_DIR = Pathname.new(__FILE__).dirname.parent.parent.parent
+  
   #The version number.
-  VERSION = Pathname.new(__FILE__).dirname.parent.parent.parent.join("VERSION.txt").read.chomp.freeze
+  VERSION = ROOT_DIR.join("VERSION.txt").read.chomp.freeze
   
   #Directory where the LaTeX template files are stored.
-  TEMPLATE_DIR = Pathname.new(__FILE__).dirname.expand_path.join("..", "..", "..", "data")
+  DATA_DIR = ROOT_DIR + "data"
+  #Directory where the internal fonts are stored.
+  FONT_DIR = DATA_DIR + "fonts"
   #The main file’s ERB template.
-  MAIN_TEMPLATE = ERB.new(TEMPLATE_DIR.join("main.tex.erb").read)
+  MAIN_TEMPLATE = ERB.new(DATA_DIR.join("main.tex.erb").read)
   #The ERB template for a single file.
-  RDOC_FILE_TEMPLATE = ERB.new(TEMPLATE_DIR.join("rdoc_file.tex.erb").read)
+  RDOC_FILE_TEMPLATE = ERB.new(DATA_DIR.join("rdoc_file.tex.erb").read)
   #The ERB template for a single class or module.
-  MODULE_TEMPLATE = ERB.new(TEMPLATE_DIR.join("module.tex.erb").read)
+  MODULE_TEMPLATE = ERB.new(DATA_DIR.join("module.tex.erb").read)
 
   #Basename of the main resulting LaTeX file. The path is prepended
   #later as it’s a temporary directory.

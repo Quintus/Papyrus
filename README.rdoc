@@ -18,6 +18,7 @@ cross-reference facilities).
 * In addition to LaTeX itself, the following LaTeX packages need to be
   installed:
   * fontspec
+  * xunicode
   * textcomp
   * eurosym
   * lastpage
@@ -173,3 +174,10 @@ As soon as Ruby 1.9.3 final is out, this will be licensed under GPLv3.
 Just in case you wonder why it isn’t that yet, Ruby’s license is at the
 moment not compatible with the GPLv3, but with the upcomming 1.9.3 release, 
 Ruby switches to a BSD-style license which allows this.
+
+=== Font license
+
+The fonts included by Papyrus are copyrighted by Philipp H. Poll
+(http://linuxlibertine.sf.net) and licensed under the Open Font
+license. See the OFL.txt file in the data/fonts directory for more
+information.

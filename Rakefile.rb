@@ -43,9 +43,10 @@ DESC
 #All core files that belong to the project and shall be
 #included in the gem
 PROJECT_FILES = [
-                 Dir["data/*.tex.erb"],
+                 Dir["data/**/*"],
                  Dir["lib/**/*.rb"],
-                 Dir["**/*.rdoc"],
+                 Dir["**/**/*.rdoc"],
+                 Dir["**/**/*.txt"],
                  "VERSION.txt",
                  "COPYING"
                  ].flatten
@@ -102,7 +103,7 @@ gem "rdoc", ">= 3"
 require "rdoc/task"
 RDoc::Task.new do |r|
   r.generator = "hanna"
-  r.rdoc_files.include("../lib/**/*.rb", "../**/*.rdoc", "../README.rdoc", "../COPYING")
+  r.rdoc_files.include("../lib/**/*.rb", "../**/**/*.rdoc", "..**/**/*.txt", "../COPYING")
   r.title = "#{PROJECT_TITLE}"
   r.main = "README.rdoc"
   r.rdoc_dir = "../doc"
@@ -118,7 +119,7 @@ task :rerdoc_html => [:clobber_rdoc, :rdoc_html]
 
 RDoc::Task.new do |r|
   r.generator = "papyrus"
-  r.rdoc_files.include("lib/**/*.rb", "**/*.rdoc", "README.rdoc", "COPYING")
+  r.rdoc_files.include("lib/**/*.rb", "**/**/*.rdoc", "**/**/*.txt", "COPYING")
   r.title = PROJECT_TITLE
   r.main = "README.rdoc"
   r.rdoc_dir = "doc"

@@ -137,6 +137,22 @@
 \setlength{\headheight}{14.5pt} %Otherwise LaTeX complains
 \renewcommand{\headrulewidth}{0.4pt}
 
+% fontspec
+\setmainfont[Path = <%= FONT_DIR %>/,
+UprightFont       = *_R,
+BoldFont          = *_RB,
+ItalicFont        = *_RI,
+%SmallCapsFont     = *_aS, %This gives "Metric (TFM) file or installed font not found."
+BoldItalicFont    = *_RBI]{LinLibertine}
+
+\setsansfont[Path = <%= FONT_DIR %>/,
+UprightFont       = *_R,
+BoldFont          = *_RB,
+ItalicFont        = *_RI,
+SmallCapsFont     = *_aS,
+BoldItalicFont    = *_aBL]{LinBiolinum} % Yes, I know, but there is no
+                                        % _RBI for Biolinum
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Document start
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
