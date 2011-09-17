@@ -83,11 +83,11 @@ class RDoc::Generator::Papyrus
   #Directory where the internal fonts are stored.
   FONT_DIR = DATA_DIR + "fonts"
   #The main file’s ERB template.
-  MAIN_TEMPLATE = ERB.new(DATA_DIR.join("main.tex.erb").read)
+  MAIN_TEMPLATE = ERB.new(File.open(DATA_DIR.join("main.tex.erb"), "r:UTF-8"){|f| f.read})
   #The ERB template for a single file.
-  RDOC_FILE_TEMPLATE = ERB.new(DATA_DIR.join("rdoc_file.tex.erb").read)
+  RDOC_FILE_TEMPLATE = ERB.new(File.open(DATA_DIR.join("rdoc_file.tex.erb"), "r:UTF-8"){|f| f.read})
   #The ERB template for a single class or module.
-  MODULE_TEMPLATE = ERB.new(DATA_DIR.join("module.tex.erb").read)
+  MODULE_TEMPLATE = ERB.new(File.open(DATA_DIR.join("module.tex.erb"), "r:UTF-8"){|f| f.read})
 
   #Basename of the main resulting LaTeX file. The path is prepended
   #later as it’s a temporary directory.
