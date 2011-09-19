@@ -9,6 +9,8 @@ Bug fixes are written in <i>italic</i>, important changes in
 
 == Next version
 
+* <b>Added commandline option <tt>--inputencoding</tt>
+* <i>Fixed an encoding problem on Windows</i>
 * <b>Switched to XeTeX as the underlying engine instead of
   pdfLaTeX</b>
 * Fixed handling of verbatim text inside headings and description
