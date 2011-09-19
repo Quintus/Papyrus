@@ -231,10 +231,11 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #==Remarks
   #Some lines of this method have their origin in the RDoc project. See
   #the code for more details.
-  def initialize(heading_level = 0, markup = nil)
+  def initialize(heading_level = 0, inputencoding = "UTF-8", markup = nil)
     super(markup)
     
     @heading_level = heading_level
+    @inputencoding = "UTF-8"
     @result = ""
     @list_in_progress = nil
     
@@ -264,12 +265,12 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds par’s text plus newline to the result.
   def accept_paragraph(par)
-    @result << to_latex(par.text) << "\n"
+    @result << to_latex(enc(par.text)) << "\n"
   end
 
   #Puts ver’s text between \begin{verbatim} and \end{verbatim}
   def accept_verbatim(ver)
-    @result << "\\begin{Verbatim}\n" << ver.text.chomp << "\n\\end{Verbatim}\n"
+    @result << "\\begin{Verbatim}\n" << enc(ver.text).chomp << "\n\\end{Verbatim}\n"
   end
 
   #Adds a \rule. The rule’s height is <tt>rule.weight</tt> pt, the
@@ -294,7 +295,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   def accept_list_item_start(item)
     if item.label
       #Verbatim inside list labels is dangerous!
-      hsh = save_verbs(item.label)
+      hsh = save_verbs(enc(item.label))
       @result << hsh[:save_verbs]
       
       if @list_in_progress == :NOTE
@@ -325,7 +326,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     #Verbatim text inside headings is one of LaTeX’s ways to hell.
     #We need to take special care of this by means of fancyvrb’s
     #\SaveVerb command plus suppressing the verbatim inside the TOC.
-    hsh = save_verbs(head.text)
+    hsh = save_verbs(enc(head.text))
     
     if hsh[:save_verbs].empty?
       @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], hsh[:save_inline]) << "\n"
@@ -354,9 +355,9 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #the #convert_flow method called in #to_latex.
   def convert_string(str)
     if in_tt?
-      str
+      enc(str)
     else
-      escape(str)
+      escape(enc(str))
     end
   end
   
@@ -364,7 +365,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #
   #Handles hyperlinks of form {text}[url] and text[url].
   def handle_special_TIDYLINK(special)
-    text = special.text
+    text = enc(special.text)
 
     return escape(text) unless text =~ /\{(.*?)\}\[(.*?)\]/ or text =~ /(\S+)\[(.*?)\]/
 
@@ -398,7 +399,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #as #to_latex, except it’ll never rely on subclasses such
   #as ToLaTeX_Crossref.
   def to_latex_suppress_crossref(item)
-    RDoc::Markup::ToLaTeX.new(@heading_level).instance_eval do
+    RDoc::Markup::ToLaTeX.new(@heading_level, @inputencoding).instance_eval do
       convert_flow(@am.flow(item))
     end
   end
@@ -454,6 +455,18 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     end
 
     {:save_verbs => saves, :save_inline => save_inline, :plain_inline => inline.gsub(/\\verb~(.*?)~/){escape($1)}}
+  end
+
+  #Takes +str+, makes a copy and forces the copy to the previously
+  #given @inputencoding. Then encodes the string into UTF-8 and returns it.
+  #
+  #This method exists, since RDoc always assumes the system encoding and
+  #assignes that to the strings passed to the visitor.
+  def enc(str)
+    s = str.dup
+    s.force_encoding(@inputencoding)
+    return s if @inputencoding == "UTF-8"
+    s.encode("UTF-8")
   end
   
 end

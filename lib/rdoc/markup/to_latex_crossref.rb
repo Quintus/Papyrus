@@ -56,8 +56,8 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
   #The newly created instance.
   #==Example
   #  f = RDoc::Markup::ToLaTeX_Crossref.new(a_rdoc_toplevel, false)
-  def initialize(context, heading_level = 0, show_hash = false, show_pages = true, hyperlink_all = false, markup = nil)
-    super(heading_level, markup)
+  def initialize(context, heading_level = 0, inputencoding = "UTF-8", show_hash = false, show_pages = true, hyperlink_all = false, markup = nil)
+    super(heading_level, inputencoding, markup)
 
     @context           = context
     @show_hash         = show_hash
@@ -107,16 +107,16 @@ class RDoc::Markup::ToLaTeX_Crossref < RDoc::Markup::ToLaTeX
     #we won’t resolve all-lowercase words (which may be false
     #positives not meant to be a reference).
     if !@hyperlink_all and special.text =~ /^[a-z]+$/
-      return escape(special.text)
+      return escape(enc(special.text))
     end
 
-    make_crossref(special.text)
+    make_crossref(enc(special.text))
   end
 
   #Adds handling of encountered <tt>rdoc-ref</tt> links
   #to the HYPERLINK handler of the ToLaTeX formatter.
   def handle_special_HYPERLINK(special)
-    return make_crossref($') if special.text =~ /^rdoc-ref:/
+    return make_crossref($') if enc(special.text) =~ /^rdoc-ref:/
     super
   end
   

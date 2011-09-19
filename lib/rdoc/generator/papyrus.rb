@@ -120,6 +120,11 @@ class RDoc::Generator::Papyrus
         debug("Found --babel-lang: #{val}")
         options.babel_lang = val
       end
+
+      options.option_parser.on("--inputencoding", "(papyrus) Sets the encoding used for the input files.", "Defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_INPUT_ENCODING}'.") do |val|
+        debug("Found --inputencoding: #{val}")
+        options.inputencoding = val
+      end
     end
 
     private

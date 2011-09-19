@@ -41,6 +41,9 @@ module RDoc
         #package.
         DEFAULT_BABEL_LANG = "english"
         
+        #The default encoding for the <tt>--inputencoding</tt> option.
+        DEFAULT_INPUT_ENCODING = "UTF-8"
+
         #Wheather or not to show page numbers in square
         #brackets behind any cross-reference made. Useful
         #if one is sure that the documentation won’t be printed
@@ -76,6 +79,16 @@ module RDoc
         #Setter for the #babel_lang value.
         def babel_lang=(val)
           @babel_lang = val
+        end
+
+        #The encoding assumed for *all* the input files. Defautls to "UTF-8".
+        def inputencoding
+          @inputencoding || DEFAULT_INPUT_ENCODING
+        end
+
+        #Setter for the #inputencoding value.
+        def inputencoding=(val)
+          @inputencoding = val
         end
         
       end
