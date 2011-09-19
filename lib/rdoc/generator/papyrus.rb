@@ -107,24 +107,34 @@ class RDoc::Generator::Papyrus
       #Define the methods to get and set the options
       options.extend(RDoc::Generator::Papyrus::Options)
 
+      options.option_parser.separator ""
+      options.option_parser.separator "Papyrus generator options:"
+      options.option_parser.separator ""
+
       #Define the options themselves
-      options.option_parser.on("--[no-]show-pages", "(pdf_latex) Enables or disables page", "numbers following hyperlinks (default true).") do |val|
+      options.option_parser.on("--[no-]show-pages", "Enables or disables page", "numbers following hyperlinks (default true).") do |val|
         debug("Found --show-pages: #{val}")
         options.show_pages = val
       end
-      options.option_parser.on("--latex-command=VALUE", "(pdf_latex) Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_LATEX_COMMAND}')") do |val|
+      options.option_parser.on("--latex-command=VALUE", " Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_LATEX_COMMAND}')") do |val|
         debug("Found --latex-command: #{val}")
         options.latex_command = val
       end
-      options.option_parser.on("--babel-lang=VALUE", "(pdf_latex) Sets the language option", "for babel (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_BABEL_LANG}')") do |val|
+      options.option_parser.on("--babel-lang=VALUE", "Sets the language option", "for babel (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_BABEL_LANG}')") do |val|
         debug("Found --babel-lang: #{val}")
         options.babel_lang = val
       end
 
-      options.option_parser.on("--inputencoding", "(papyrus) Sets the encoding used for the input files.", "Defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_INPUT_ENCODING}'.") do |val|
+      options.option_parser.on("--inputencoding", "Sets the encoding used for the input files.", "Defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_INPUT_ENCODING}'.") do |val|
         debug("Found --inputencoding: #{val}")
         options.inputencoding = val
       end
+
+      options.option_parser.on("--[-no]-append-code", 
+                               "If set, the sourcecode of all methods is included", 
+                               "as an appendix (warning: HUGE PDF", 
+                               "files can be the result! Default: false."){|val| options.append_code = val}
+
     end
 
     private
