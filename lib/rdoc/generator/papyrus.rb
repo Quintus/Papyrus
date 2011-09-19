@@ -130,10 +130,10 @@ class RDoc::Generator::Papyrus
         options.inputencoding = val
       end
 
-      options.option_parser.on("--[-no]-append-code", 
+      options.option_parser.on("--[no-]append-source",
                                "If set, the sourcecode of all methods is included", 
                                "as an appendix (warning: HUGE PDF", 
-                               "files can be the result! Default: false."){|val| options.append_code = val}
+                               "files can be the result! Default: false."){|val| options.append_source = val}
 
     end
 

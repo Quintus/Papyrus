@@ -9,7 +9,8 @@ Bug fixes are written in <i>italic</i>, important changes in
 
 == Next version
 
-* <b>Added commandline option <tt>--inputencoding</tt>
+* <b>Added commandline option <tt>--append-source</tt></b>
+* <b>Added commandline option <tt>--inputencoding</tt></b>
 * <i>Fixed an encoding problem on Windows</i>
 * <b>Switched to XeTeX as the underlying engine instead of
   pdfLaTeX</b>
