@@ -94,6 +94,7 @@ task :rdoc_html do
   #This is a workaround the situation that defining
   #multiple RDoc::Tasks in a Rakefile doesn't work
   #correctly--if calling one of the task, *all* get executed.
+  rm_rf TMP_DOC_DIR if File.directory?(TMP_DOC_DIR)
   mkdir TMP_DOC_DIR
   cd TMP_DOC_DIR
   File.open("Rakefile", "w") do |f|
