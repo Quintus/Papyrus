@@ -57,7 +57,7 @@ PROJECT_REQUIREMENTS = [
                         ]
 
 #List of projects to document in the :document_test task
-TEST_PROJECTS = %w[activerecord]
+TEST_PROJECTS = %w[rails railties activerecord nokogiri coderay]
 TEST_PROJECTS_DIR = "test/gems"
 
 #The gem specification
@@ -145,7 +145,7 @@ task :document_test do
   cd TEST_PROJECTS_DIR
   
   TEST_PROJECTS.each do |gemname|
-    recent_version = `gem list #{gemname} -r`.lines.first.match(/\((.*)\)/)[1]
+    recent_version = `gem list #{gemname} -r`.lines.first.match(/\((.*?)(?:\)| )/)[1]
     full_name = "#{gemname}-#{recent_version}"
     puts "Documenting #{full_name}..."
     
