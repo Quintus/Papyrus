@@ -203,7 +203,8 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
   def accept_list_item_start_note_2
     expect =<<-EX
 \\begin{description}
-\\item[\\verb~teletype~:] teletype description
+\\SaveVerb{verb0}~teletype~
+\\item[\\protect\\UseVerb{verb0}:] teletype description
 \\end{description}
     EX
     assert_equal(expect, @to.result)
