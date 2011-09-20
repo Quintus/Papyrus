@@ -38,7 +38,10 @@ module RDoc::Generator::LaTeX_Markup
     "^" => ":xor:",
     "&" => ":amp:",
     "_" => ":und:",
-    "~" => ":tilde:"
+    "~" => ":tilde:",
+    "[" => ":rbracket:",
+    "]" => ":lbracket:",
+    "=" => ":equal:"
   }.freeze
   
   #Create an unique label for this CodeObject.
