@@ -26,7 +26,7 @@ require "rdoc/markup/inline"
 
 #This is an RDoc Converter/Formatter that turns the RDoc
 #markup into LaTeX code. It’s intended for use with
-#the RDoc::Generator::PDF_LaTeX class, but if you like you
+#the RDoc::Generator::Papyrus class, but if you like you
 #can use it on it’s own (but note this class absolutely
 #depends on RDoc’s parser). To use it, you first have
 #to instanciate this class, and then call the #convert method
