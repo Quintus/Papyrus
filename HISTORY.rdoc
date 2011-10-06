@@ -7,7 +7,7 @@ two releases. For a comprehensive list, see the
 Bug fixes are written in <i>italic</i>, important changes in
 <b>bold</b>.
 
-== Next version
+== 0.0.2
 
 * Much more stable now!
 * <b>Added commandline option <tt>--append-source</tt></b>
