@@ -43,9 +43,10 @@ DESC
 #All core files that belong to the project and shall be
 #included in the gem
 PROJECT_FILES = [
-                 Dir["data/*.tex.erb"],
+                 Dir["data/**/*"],
                  Dir["lib/**/*.rb"],
-                 Dir["**/*.rdoc"],
+                 Dir["**/**/*.rdoc"],
+                 Dir["**/**/*.txt"],
                  "VERSION.txt",
                  "COPYING"
                  ].flatten
@@ -54,6 +55,10 @@ PROJECT_FILES = [
 PROJECT_REQUIREMENTS = [
                         "(pdf)LaTeX2e: For the actual PDF generation."
                         ]
+
+#List of projects to document in the :document_test task
+TEST_PROJECTS = %w[rails railties activerecord nokogiri coderay]
+TEST_PROJECTS_DIR = "test/gems"
 
 #The gem specification
 GEMSPEC = Gem::Specification.new do |spec|
@@ -81,7 +86,7 @@ Gem::PackageTask.new(GEMSPEC).define
 #documentation.
 TMP_DOC_DIR = "tmp"
 
-CLEAN.include(TMP_DOC_DIR)
+CLEAN.include(TMP_DOC_DIR, TEST_PROJECTS_DIR)
 ENV["RDOCOPT"] = nil #Needed to override my "-f hanna" default
 
 desc "Generate RDoc documentation in HTML format."
@@ -89,6 +94,7 @@ task :rdoc_html do
   #This is a workaround the situation that defining
   #multiple RDoc::Tasks in a Rakefile doesn't work
   #correctly--if calling one of the task, *all* get executed.
+  rm_rf TMP_DOC_DIR if File.directory?(TMP_DOC_DIR)
   mkdir TMP_DOC_DIR
   cd TMP_DOC_DIR
   File.open("Rakefile", "w") do |f|
@@ -98,7 +104,7 @@ gem "rdoc", ">= 3"
 require "rdoc/task"
 RDoc::Task.new do |r|
   r.generator = "hanna"
-  r.rdoc_files.include("../lib/**/*.rb", "../**/*.rdoc", "../README.rdoc", "../COPYING")
+  r.rdoc_files.include("../lib/**/*.rb", "../**/**/*.rdoc", "..**/**/*.txt", "../COPYING")
   r.title = "#{PROJECT_TITLE}"
   r.main = "README.rdoc"
   r.rdoc_dir = "../doc"
@@ -114,7 +120,7 @@ task :rerdoc_html => [:clobber_rdoc, :rdoc_html]
 
 RDoc::Task.new do |r|
   r.generator = "papyrus"
-  r.rdoc_files.include("lib/**/*.rb", "**/*.rdoc", "README.rdoc", "COPYING")
+  r.rdoc_files.include("lib/**/*.rb", "**/**/*.rdoc", "**/**/*.txt", "COPYING")
   r.title = PROJECT_TITLE
   r.main = "README.rdoc"
   r.rdoc_dir = "doc"
@@ -131,3 +137,32 @@ end
 
 desc "Runs the PDF generation in debug mode."
 task :rdoc_debug => [:clobber_rdoc, :rdoc_set_debug, :rdoc]
+
+desc "Documents some bigger projects with papyrus."
+task :document_test do
+  prev_dir = Dir.pwd
+  mkdir_p TEST_PROJECTS_DIR
+  cd TEST_PROJECTS_DIR
+  
+  TEST_PROJECTS.each do |gemname|
+    recent_version = `gem list #{gemname} -r`.lines.first.match(/\((.*?)(?:\)| )/)[1]
+    full_name = "#{gemname}-#{recent_version}"
+    puts "Documenting #{full_name}..."
+    
+    sh "gem fetch #{gemname}"
+    sh "gem unpack #{full_name}.gem"
+    cd full_name
+
+    main_page = nil
+    %w[README README.txt README.rdoc].each{|f| main_page = f if File.file?(f)}
+    args = %w[-f papyrus -o papyrus-doc --debug]
+    args += %w[-m] + [main_page] if main_page
+    args += %w[lib ext] + Dir["*.rdoc"]
+    rdoc = RDoc::RDoc.new
+    puts "rdoc #{args.join(' ')}"
+    rdoc.document(args)
+
+    cd ".."
+  end
+  cd prev_dir
+end

@@ -28,6 +28,22 @@
 #would therefore take precedence during method lookup.
 module RDoc::Generator::LaTeX_Markup
 
+  #Special escapes to be used inside the hyperref labels
+  #(hyperref doesn't accept the normal escapes correctly
+  #or not at all (in case of _ -> \_). A hash of form:
+  #  "char" => "escape"
+  LABEL_ESCAPE = {
+    "#" => ":INST:",
+    "%" => ":perc:",
+    "^" => ":xor:",
+    "&" => ":amp:",
+    "_" => ":und:",
+    "~" => ":tilde:",
+    "[" => ":rbracket:",
+    "]" => ":lbracket:",
+    "=" => ":equal:"
+  }.freeze
+  
   #Create an unique label for this CodeObject.
   #==Return value
   #A string (hopefully) uniquely identifying this CodeObject. Intended for
@@ -36,9 +52,9 @@ module RDoc::Generator::LaTeX_Markup
   #[PapyrusError] +self+ isn’t a CodeObject (→ Context::Section).
   def latex_label
     case self
-    when RDoc::Context then "class-module-#{full_name}"
-    when RDoc::MethodAttr then "method-attr-#{full_name.gsub('#', '+')}" # '#' doesn’t work in references
-    when RDoc::Constant then "const-#{parent.full_name}::#{name}"
+    when RDoc::Context then "class-module-#{label_escape(full_name)}"
+    when RDoc::MethodAttr then "method-attr-#{label_escape(full_name)}"
+    when RDoc::Constant then "const-#{label_escape(parent.full_name)}::#{label_escape(name)}"
     else
       raise(RDoc::Generator::Papyrus::PapyrusError, "Unrecognized token: #{self.inspect}!")
     end
@@ -73,6 +89,7 @@ module RDoc::Generator::LaTeX_Markup
 
     @formatter = RDoc::Markup::ToLaTeX_Crossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
                                                     current_heading_level,
+                                                    RDoc::RDoc.current.options.inputencoding,
                                                     RDoc::RDoc.current.options.show_hash,
                                                     RDoc::RDoc.current.options.show_pages,
                                                     RDoc::RDoc.current.options.hyperlink_all)
@@ -93,6 +110,19 @@ module RDoc::Generator::LaTeX_Markup
       0
     end
   end
+
+  private
+
+  #Uses the LABEL_ESCAPE hash to replace all necessary characters
+  #in +str+ and returns the result.
+  def label_escape(str)
+    res = str.dup
+    LABEL_ESCAPE.each_pair do |char, esc|
+      res.gsub!(char, esc)
+    end
+    res
+  end
+  
 end
 
 #FIXME:

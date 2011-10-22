@@ -26,7 +26,7 @@ require "rdoc/markup/inline"
 
 #This is an RDoc Converter/Formatter that turns the RDoc
 #markup into LaTeX code. It’s intended for use with
-#the RDoc::Generator::PDF_LaTeX class, but if you like you
+#the RDoc::Generator::Papyrus class, but if you like you
 #can use it on it’s own (but note this class absolutely
 #depends on RDoc’s parser). To use it, you first have
 #to instanciate this class, and then call the #convert method
@@ -176,6 +176,15 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
                     "\\subparagraph*{%s}",       #Needed??
                     "%s", "%s", "%s", "%s", "%s", "%s"].freeze #Everything below is just ignored.
 
+  #LaTeX heading commands for headings with an optional
+  #argument to change the TOC entry. Just reach till level 4,
+  #because lower headings don’t show up in the TOC at all.
+  LATEX_OPT_HEADINGS = [nil,
+                        "\\section[%s]{%s}",
+                        "\\subsection[%s]{%s}",
+                        "\\subsubsection[%s]{%s}",
+                        "\\subsubsubsection[%s]{%s}"
+                        ]
   #Characters that need to be escaped for LaTeX and their
   #corresponding escape sequences. Note the order if important,
   #otherwise some things (especiallaly \ and {}) are escaped
@@ -190,7 +199,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
     /(?<!textbackslash){/  => "\\{",
     /(?<!textbackslash{)}/ => "\\}",
     /_/     => "\\textunderscore{}",
-    /\.{3}/ => "\\ldots",
+    /\.{3}/ => "\\ldots{}",
     /~/     => "\\~",
     /©/     => "\\copyright{}",
     /LaTeX/ => "\\LaTeX{}"
@@ -222,10 +231,11 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #==Remarks
   #Some lines of this method have their origin in the RDoc project. See
   #the code for more details.
-  def initialize(heading_level = 0, markup = nil)
+  def initialize(heading_level = 0, inputencoding = "UTF-8", markup = nil)
     super(markup)
     
     @heading_level = heading_level
+    @inputencoding = "UTF-8"
     @result = ""
     @list_in_progress = nil
     
@@ -255,12 +265,12 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds par’s text plus newline to the result.
   def accept_paragraph(par)
-    @result << to_latex(par.text) << "\n"
+    @result << to_latex(enc(par.text)) << "\n"
   end
 
   #Puts ver’s text between \begin{verbatim} and \end{verbatim}
   def accept_verbatim(ver)
-    @result << "\\begin{Verbatim}\n" << ver.text.chomp << "\n\\end{Verbatim}\n"
+    @result << "\\begin{Verbatim}\n" << enc(ver.text).chomp << "\n\\end{Verbatim}\n"
   end
 
   #Adds a \rule. The rule’s height is <tt>rule.weight</tt> pt, the
@@ -284,11 +294,14 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #Adds \item[label_if_necessary].
   def accept_list_item_start(item)
     if item.label
+      #Verbatim inside list labels is dangerous!
+      hsh = save_verbs(enc(item.label))
+      @result << hsh[:save_verbs]
       
       if @list_in_progress == :NOTE
-        @result << "\\item[#{to_latex_suppress_crossref(item.label)}:] " #Newline done by ending paragraph
+        @result << "\\item[#{hsh[:save_inline]}:] " #Newline done by ending paragraph
       else
-        @result << "\\item[#{to_latex_suppress_crossref(item.label)}] " #Newline done by ending paragraph
+        @result << "\\item[#{hsh[:save_inline]}] " #Newline done by ending paragraph
       end
     else
       @result << "\\item " #Newline done by ending method
@@ -310,7 +323,22 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
 
   #Adds a fitting \section, \subsection, etc. for the heading.
   def accept_heading(head)
-    @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], to_latex_suppress_crossref(head.text)) << "\n"
+    #Verbatim text inside headings is one of LaTeX’s ways to hell.
+    #We need to take special care of this by means of fancyvrb’s
+    #\SaveVerb command plus suppressing the verbatim inside the TOC.
+    hsh = save_verbs(enc(head.text))
+    
+    if hsh[:save_verbs].empty?
+      @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], hsh[:save_inline]) << "\n"
+    else #OK, some fool must have verbatim in the heading...
+      @result << hsh[:save_verbs]
+      heading = LATEX_OPT_HEADINGS[@heading_level + head.level]
+      if heading
+        @result << sprintf(heading, hsh[:plain_inline], hsh[:save_inline]) << "\n"
+      else #Heading not in TOC
+        @result << sprintf(LATEX_HEADINGS[@heading_level + head.level], hsh[:save_inline]) << "\n"
+      end
+    end
   end
 
   #Writes the raw thing as-is into the document. 
@@ -326,14 +354,18 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #Called for each plaintext string in a paragraph by
   #the #convert_flow method called in #to_latex.
   def convert_string(str)
-    escape(str)
+    if in_tt?
+      enc(str)
+    else
+      escape(enc(str))
+    end
   end
   
   #Method copied from RDoc project and slightly modified.
   #
   #Handles hyperlinks of form {text}[url] and text[url].
   def handle_special_TIDYLINK(special)
-    text = special.text
+    text = enc(special.text)
 
     return escape(text) unless text =~ /\{(.*?)\}\[(.*?)\]/ or text =~ /(\S+)\[(.*?)\]/
 
@@ -367,7 +399,7 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
   #as #to_latex, except it’ll never rely on subclasses such
   #as ToLaTeX_Crossref.
   def to_latex_suppress_crossref(item)
-    RDoc::Markup::ToLaTeX.new(@heading_level).instance_eval do
+    RDoc::Markup::ToLaTeX.new(@heading_level, @inputencoding).instance_eval do
       convert_flow(@am.flow(item))
     end
   end
@@ -394,6 +426,47 @@ class RDoc::Markup::ToLaTeX < RDoc::Markup::Formatter
       "\\url{#{url}}"
     end
   end
+
+  #Finds all \verb commands in +text+ and replaces them with
+  #fancyvrb’s super-secure \SaveVerb-\UseVerb mechanism. Returns
+  #a hash of form
+  #  {:save_verbs => str1, :save_inline => str2, :plain_inline => str3}
+  #where the :save_inline string contains \UseVerb commands
+  #making use of the \SaveVerb commands issued in the
+  #:save_verbs string (the latter being empty if no replacements
+  #were made). If replacements were made, :save_verbs ends in a
+  #newline character.
+  #
+  #+text+ is automatically markup up, but without cross-references,
+  #because where \verb is fragile, cross-references usually are as well.
+  #
+  #:plain_inline contains the marked-up string with all \verb commands
+  #just removed and replaced with their (LaTeX-escaped) text.
+  def save_verbs(text)
+    @save_verb_index ||= 0 #Variable just used for this method
+    saves  = ""
+    inline = to_latex_suppress_crossref(text)
+
+    save_inline = inline.gsub(/\\verb~(.*?)~/) do
+      saves << "\\SaveVerb{verb#{@save_verb_index}}~#$1~\n"
+      str = "\\protect\\UseVerb{verb#{@save_verb_index}}"
+      @save_verb_index += 1
+      str #for gsub
+    end
+
+    {:save_verbs => saves, :save_inline => save_inline, :plain_inline => inline.gsub(/\\verb~(.*?)~/){escape($1)}}
+  end
+
+  #Takes +str+, makes a copy and forces the copy to the previously
+  #given @inputencoding. Then encodes the string into UTF-8 and returns it.
+  #
+  #This method exists, since RDoc always assumes the system encoding and
+  #assignes that to the strings passed to the visitor.
+  def enc(str)
+    s = str.dup
+    s.force_encoding(@inputencoding)
+    return s if @inputencoding == "UTF-8"
+    s.encode("UTF-8")
+  end
   
 end
-

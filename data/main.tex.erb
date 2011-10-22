@@ -34,7 +34,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \usepackage[<%= babel_lang %>]{babel} %Hyphenation, etc.
-\usepackage{fontspec}
+\usepackage{fontspec} %XeTeX font selsection made easy
+\usepackage{xunicode} %Correct unicode characters (for searching, etc.)
 \usepackage{textcomp} %Useful things like \textdegree
 \usepackage[official]{eurosym} %Official \euro symbol
 \usepackage{lastpage} %Get a reference on the last page
@@ -44,12 +45,12 @@
 \usepackage{longtable}
 %\usepackage{amsmath} %For math
 %\usepackage{amsfonts} %Math fonts
-%\usepackage{listings} %Syntax hightlighting
+\usepackage{listings} %Syntax hightlighting
 \usepackage{xcolor} %Colored text
 %\usepackage{graphicx} %Graphics
 \usepackage{titlesec} %Easily define new heading styles
 \usepackage{titletoc} %For telling LaTeX where to put the new headings in the TOC
-\usepackage[unicode=true,xetex]{hyperref} %For hyperlinks
+\usepackage[xetex]{hyperref} %For hyperlinks
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % General information
@@ -136,6 +137,30 @@
 \setlength{\headheight}{14.5pt} %Otherwise LaTeX complains
 \renewcommand{\headrulewidth}{0.4pt}
 
+% fontspec
+\setmainfont[Path = <%= FONT_DIR %>/,
+UprightFont       = *_R,
+BoldFont          = *_RB,
+ItalicFont        = *_RI,
+%SmallCapsFont     = *_aS, %This gives "Metric (TFM) file or installed font not found."
+BoldItalicFont    = *_RBI]{LinLibertine}
+
+\setsansfont[Path = <%= FONT_DIR %>/,
+UprightFont       = *_R,
+BoldFont          = *_RB,
+ItalicFont        = *_RI,
+SmallCapsFont     = *_aS,
+BoldItalicFont    = *_aBL]{LinBiolinum} % Yes, I know, but there is no
+                                        % _RBI for Biolinum
+
+% lstlistings
+\lstset{
+  basicstyle=\ttfamily\small,       %Monospaced sourecode, small
+  showstringspaces=false,           %Suppress marking spaces in strings
+  keywordstyle=\color{olive},       %Green keywords
+  commentstyle=\itshape\color{gray} %Grey and italic comments
+}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Document start
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -176,8 +201,33 @@
 \clearpage
 
 \section{Class and module reference}
-<% @classes_and_modules.each do |mod| %>
+%<% @classes_and_modules.each do |mod| %>
   \input{<%= render_module(mod) %>}\clearpage %Always start a new page for a new class/module
-<% end %>
+%<% end %>
+
+%<% if @options.append_source %>
+  \appendix
+  \section{Sourcecode}
+  
+  Following is the sourcode of all the methods that have been
+  documented, sorted as follows:
+  
+  \begin{enumerate}
+  \item Classes and modules are sorted alphabetically.
+  \item Class/module methods go before instance methods.
+  \item The methods are sorted alphabetically.
+  \end{enumerate}
+  
+% <% @classes_and_modules.each do |mod| %>
+    \subsection{<%= mod.latexized(:full_name) %>}
+
+%   <% mod.method_list.sort.each do |meth| %>
+      \method{<%= meth.latexized(:pretty_name) %>}
+      \begin{lstlisting}[language=<%= meth.c_function ? "c" : "ruby" %>]
+      <%= meth.tokens_to_s rescue "NOT FOUND" %>
+      \end{lstlisting}
+%   <% end %>
+% <% end %>
+%<% end %>
 
 \end{document}

@@ -41,6 +41,9 @@ module RDoc
         #package.
         DEFAULT_BABEL_LANG = "english"
         
+        #The default encoding for the <tt>--inputencoding</tt> option.
+        DEFAULT_INPUT_ENCODING = "UTF-8"
+
         #Wheather or not to show page numbers in square
         #brackets behind any cross-reference made. Useful
         #if one is sure that the documentation won’t be printed
@@ -77,7 +80,33 @@ module RDoc
         def babel_lang=(val)
           @babel_lang = val
         end
+
+        #The encoding assumed for *all* the input files. Defautls to "UTF-8".
+        def inputencoding
+          @inputencoding ||= DEFAULT_INPUT_ENCODING
+        end
+
+        #Setter for the #inputencoding value.
+        def inputencoding=(val)
+          @inputencoding = val
+        end
+
+        #Wheather or not to include the methods' sourcecode in the
+        #PDF file in form of an appendix. I highly recommand you to
+        #not do this as the bigger a project grows, the thicker the
+        #resulting PDF will be. Furthermore printing the PDF would
+        #resulting in printing the sourcecode which is nonsense as
+        #you're better off directly looking into the sourcecode files
+        #with your favourite editor where you can edit them.
+        def append_source
+          @append_source ||= false
+        end
         
+        #Stter for the #append_source value.
+        def append_source=(val)
+          @append_source = val
+        end
+
       end
 
     end

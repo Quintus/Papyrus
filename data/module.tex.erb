@@ -53,7 +53,7 @@
 %  <% consts.each do |const| %>
 \label{<%= const.latex_label %>}%
 \small{\code{<%= const.latexized :name %>}} & %
-\small{\code{<%= const.latexized_value %>}} & %
+\small{\code{<%= const.latexized_value.delete("\n") %>}} & %
 <%= const.description %> \\
 & & \\ %Empty row for readability
 %  <%  end %>

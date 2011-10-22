@@ -19,6 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 gem "rdoc"
+require "rdoc"
 require "rdoc/markup/formatter_test_case"
 require "minitest/autorun"
 require_relative "../lib/rdoc/markup/to_latex"
@@ -203,7 +204,8 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
   def accept_list_item_start_note_2
     expect =<<-EX
 \\begin{description}
-\\item[\\verb~teletype~:] teletype description
+\\SaveVerb{verb0}~teletype~
+\\item[\\protect\\UseVerb{verb0}:] teletype description
 \\end{description}
     EX
     assert_equal(expect, @to.result)
@@ -282,6 +284,32 @@ class TestRDocMarkupToLaTeX < RDoc::Markup::FormatterTestCase
     assert_equal("\\subsubsection{Hello}\n", f1.convert("==Hello"))
     assert_equal("\\microsection*{Hello}\n", f4.convert("=Hello"))
     assert_equal("\\paragraph*{Hello.} \n", f4.convert("==Hello"))
+  end
+
+  def test_verbatim_headings
+    f1 = RDoc::Markup::ToLaTeX.new(1)
+    f4 = RDoc::Markup::ToLaTeX.new(4)
+
+    expected =<<-EOF
+\\SaveVerb{verb0}~This is verbatim 0.~
+\\subsection[Verbatim text: This is verbatim 0.]{Verbatim text: \\protect\\UseVerb{verb0}}
+    EOF
+    assert_equal(expected, f1.convert("=Verbatim text: <tt>This is verbatim 0.</tt>"))
+
+    input=<<-EOF
+== Test1: +verbatim+
+Foo bar baz
+== Test2: <tt>Verbatim } % _ 2</tt>
+    EOF
+    
+    expected =<<-EOF
+\\SaveVerb{verb0}~verbatim~
+\\paragraph*{Test1: \\protect\\UseVerb{verb0}.} 
+Foo bar baz
+\\SaveVerb{verb1}~Verbatim } % _ 2~
+\\paragraph*{Test2: \\protect\\UseVerb{verb1}.} 
+  EOF
+    assert_equal(expected, f4.convert(input))
   end
   
 end

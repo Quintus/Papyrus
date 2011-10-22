@@ -72,17 +72,22 @@ class RDoc::Generator::Papyrus
   #Description displayed in RDoc’s help.
   DESCRIPTION = "PDF generator based on LaTeX"
 
+  #Root directory of this project.
+  ROOT_DIR = Pathname.new(__FILE__).dirname.parent.parent.parent
+  
   #The version number.
-  VERSION = Pathname.new(__FILE__).dirname.parent.parent.parent.join("VERSION.txt").read.chomp.freeze
+  VERSION = ROOT_DIR.join("VERSION.txt").read.chomp.freeze
   
   #Directory where the LaTeX template files are stored.
-  TEMPLATE_DIR = Pathname.new(__FILE__).dirname.expand_path.join("..", "..", "..", "data")
+  DATA_DIR = ROOT_DIR + "data"
+  #Directory where the internal fonts are stored.
+  FONT_DIR = DATA_DIR + "fonts"
   #The main file’s ERB template.
-  MAIN_TEMPLATE = ERB.new(TEMPLATE_DIR.join("main.tex.erb").read)
+  MAIN_TEMPLATE = ERB.new(File.open(DATA_DIR.join("main.tex.erb"), "r:UTF-8"){|f| f.read})
   #The ERB template for a single file.
-  RDOC_FILE_TEMPLATE = ERB.new(TEMPLATE_DIR.join("rdoc_file.tex.erb").read)
+  RDOC_FILE_TEMPLATE = ERB.new(File.open(DATA_DIR.join("rdoc_file.tex.erb"), "r:UTF-8"){|f| f.read})
   #The ERB template for a single class or module.
-  MODULE_TEMPLATE = ERB.new(TEMPLATE_DIR.join("module.tex.erb").read)
+  MODULE_TEMPLATE = ERB.new(File.open(DATA_DIR.join("module.tex.erb"), "r:UTF-8"){|f| f.read})
 
   #Basename of the main resulting LaTeX file. The path is prepended
   #later as it’s a temporary directory.
@@ -102,19 +107,34 @@ class RDoc::Generator::Papyrus
       #Define the methods to get and set the options
       options.extend(RDoc::Generator::Papyrus::Options)
 
+      options.option_parser.separator ""
+      options.option_parser.separator "Papyrus generator options:"
+      options.option_parser.separator ""
+
       #Define the options themselves
-      options.option_parser.on("--[no-]show-pages", "(pdf_latex) Enables or disables page", "numbers following hyperlinks (default true).") do |val|
+      options.option_parser.on("--[no-]show-pages", "Enables or disables page", "numbers following hyperlinks (default true).") do |val|
         debug("Found --show-pages: #{val}")
         options.show_pages = val
       end
-      options.option_parser.on("--latex-command=VALUE", "(pdf_latex) Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_LATEX_COMMAND}')") do |val|
+      options.option_parser.on("--latex-command=VALUE", " Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_LATEX_COMMAND}')") do |val|
         debug("Found --latex-command: #{val}")
         options.latex_command = val
       end
-      options.option_parser.on("--babel-lang=VALUE", "(pdf_latex) Sets the language option", "for babel (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_BABEL_LANG}')") do |val|
+      options.option_parser.on("--babel-lang=VALUE", "Sets the language option", "for babel (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_BABEL_LANG}')") do |val|
         debug("Found --babel-lang: #{val}")
         options.babel_lang = val
       end
+
+      options.option_parser.on("--inputencoding", "Sets the encoding used for the input files.", "Defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_INPUT_ENCODING}'.") do |val|
+        debug("Found --inputencoding: #{val}")
+        options.inputencoding = val
+      end
+
+      options.option_parser.on("--[no-]append-source",
+                               "If set, the sourcecode of all methods is included", 
+                               "as an appendix (warning: HUGE PDF", 
+                               "files can be the result! Default: false."){|val| options.append_source = val}
+
     end
 
     private
@@ -173,8 +193,10 @@ class RDoc::Generator::Papyrus
     debug("Found #{@rdoc_files.count} toplevels ending in .rdoc that will be processed")
     if @options.main_page #nil if not set, no main page
       main_index = @rdoc_files.index{|t| t.full_name == @options.main_page}
-      @rdoc_files.unshift(@rdoc_files.slice!(main_index))
-      debug("Main page is #{@rdoc_files.first.name}")
+      if main_index #nil if invalid main_page given
+        @rdoc_files.unshift(@rdoc_files.slice!(main_index))
+        debug("Main page is #{@rdoc_files.first.name}")
+      end
     end
 
     #Get the class, module and methods lists, sorted alphabetically by their full names
@@ -229,8 +251,10 @@ class RDoc::Generator::Papyrus
     #Remove the temporary directory (this is *not* done if invoking LaTeX
     #failed, as the #latex method throws an exception. This is useful for
     #debugging the generated LaTeX files)
-    debug("Removing temporary directory")
-    temp_dir.rmtree unless @options.dry_run
+    unless $DEBUG_RDOC
+      debug("Removing temporary directory")
+      temp_dir.rmtree unless @options.dry_run
+    end
   end
 
   private
@@ -321,7 +345,7 @@ class RDoc::Generator::Papyrus
   #a \hyperref to it if possible. Otherwise just returns +obj+.
   def superclass_string(obj)
     if obj.kind_of?(String)
-      obj
+      RDoc::Markup::ToLaTeX.new.escape(obj) #HACK, \verb doesn't do the trick here
     else
       hyperref(obj.latex_label, obj.latexized(:full_name))
     end
@@ -333,6 +357,7 @@ class RDoc::Generator::Papyrus
     table_str = ""
     table_str << "\\small"
     table_str << "\\begin{longtable}{l|l|l|l|l|l}\n"
+    #table_str << "\\begin{longtable}{p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}|p{0.1666\\textwidth}}\n"
     table_str << "  \\bfseries Name & \\bfseries p & \\bfseries Name & \\bfseries p & \\bfseries Name & \\bfseries p \\\\\n"
     table_str << "  \\hline\n"
     table_str << "\\endhead\n"
