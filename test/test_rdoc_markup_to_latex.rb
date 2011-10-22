@@ -19,6 +19,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 gem "rdoc"
+require "rdoc"
 require "rdoc/markup/formatter_test_case"
 require "minitest/autorun"
 require_relative "../lib/rdoc/markup/to_latex"
