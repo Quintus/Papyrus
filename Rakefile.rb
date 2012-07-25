@@ -28,11 +28,11 @@ require "rubygems/package_task"
 require_relative "lib/rdoc/generator/papyrus"
 
 #The project’s title as it appears in the docs.
-PROJECT_TITLE = "Papyrus--LaTeX-PDF generator for RDoc"
+PROJECT_TITLE = "Papyrus--Prawn-PDF generator for RDoc"
 #The project’s name, to be used for the gem name
 PROJECT_NAME = "papyrus"
 #A one-line summary of the project, used for the gem summary
-PROJECT_SUMMARY = "PDF generator plugin for RDoc, based on LaTeX"
+PROJECT_SUMMARY = "PDF generator plugin for RDoc, based on Prawn"
 #A full description of the whole thing
 PROJECT_DESC =<<DESC
 Papyrus is a PDF generator plugin for RDoc based on LaTeX. It
