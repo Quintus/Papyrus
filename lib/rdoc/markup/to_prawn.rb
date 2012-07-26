@@ -69,13 +69,18 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
                    14,
                    12]
 
+  #Number of PDF points to indent when a list ist encountered.
+  LIST_PADDING = 20
+
   def initialize(pdf, heading_level = 0, inputencoding = "UTF-8", markup = nil)
     super(markup)
 
-    @pdf              = pdf
-    @heading_level    = heading_level
-    @inputencoding    = inputencoding
-    @list_in_progress = nil
+    @pdf               = pdf
+    @heading_level     = heading_level
+    @inputencoding     = inputencoding
+    @lists_in_progress = []
+    @list_numbers      = [] # Keeps track of the labels of number lists
+    @paddings          = [] # Keeps track of the indentation
 
     # Copied from RDoc 3.12, adds link capabilities
     @markup.add_special(/((link:|https?:|mailto:|ftp:|irc:|www\.)\S+\w)/, :HYPERLINK)
@@ -135,24 +140,45 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   end
 
   def accept_list_start(list)
-    @pdf.text("=== LIST ===")
-    @list_in_progress = list.type
+    @lists_in_progress.push(list.type)
+    @list_numbers << 0 if list.type == :NUMBER # Add a label number if we enter a NUMBER list
   end
 
   def accept_list_end(list)
-    @pdf.text("=== END LIST ===")
-    @list_in_progress = nil
+    @list_numbers.pop if @lists_in_progress.pop == :NUMBER # Remove a number if we leave a NUMBER list
   end
 
   def accept_list_item_start(item)
-    #TODO: Bullet + Einrückung
-    if @list_in_progress == :NOTE
-      @pdf.text("[#{item.label}] ")
+    case @lists_in_progress.last
+    when :BULLET then
+      pdf_add_padding(LIST_PADDING)
+
+      bullet_radius = @pdf.font.ascender / 5
+      @pdf.fill do
+        @pdf.circle([-bullet_radius - 5, @pdf.cursor - @pdf.font.ascender / 2], bullet_radius) # -5 ensures the bullet doesn’t touch the text
+      end
+    when :NUMBER then
+      pdf_add_padding(LIST_PADDING)
+
+      # Increment the last number of the number label
+      @list_numbers[-1] += 1
+      label = "#{@list_numbers.join('.')}."
+
+      @pdf.draw_text(label, at: [-@pdf.width_of(label) - 5, @pdf.cursor - @pdf.font.ascender]) # -5 ensures the label doesn’t touch the text
+    when :NOTE, :LABEL then
+      label_width = @pdf.width_of(item.label, style: :bold) + 5 # +5 ensures the label doesn’t touch the text
+      pdf_add_padding(label_width)
+
+      @pdf.draw_text(item.label, at: [-label_width, @pdf.cursor - @pdf.font.ascender], style: :bold)
+    #when :UALPHA then
+    #when :LALPHA then
+    else
+      raise("Unknown list type #@list_in_progress!")
     end
   end
 
   def accept_list_item_end(item)
-    # Nothing
+    pdf_subtract_last_padding
   end
 
   def accept_blank_line(line)
@@ -185,6 +211,18 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
 
   def to_prawn(item)
     # TODO
+  end
+
+  # Indents all following flow commands by +padding+ PDF points.
+  # Call #pdf_subtract_last_padding to undo the effect.
+  def pdf_add_padding(padding)
+    @paddings.push(padding)
+    @pdf.bounds.add_left_padding(padding)
+  end
+
+  # Undoes a previous #pdf_add_padding.
+  def pdf_subtract_last_padding
+    @pdf.bounds.subtract_left_padding(@paddings.pop)
   end
 
 end

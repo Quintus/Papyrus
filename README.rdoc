@@ -31,10 +31,22 @@ cross-reference facilities).
   * titletoc
   * hyperref
   If any of these is missing, you'll get that obscure
+
     Invoking xelatex failed with exitstatus 1!
+
   message. To see which was the cause for this error, you can
   pass the <tt>--debug</tt> option to RDoc as in:
+
     rdoc -f papyrus --debug WHATEVERYOUWANTTODOCUMENT
+
+1. Number one.
+2. Number two.
+   1. Number Two-One
+   2. Number Two-Two
+3. Number Three.
+   * Bullet one
+   * Bullet two
+4. Number Four.
 
 == Installation
 
