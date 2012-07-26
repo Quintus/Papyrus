@@ -72,6 +72,12 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   #Number of PDF points to indent when a list ist encountered.
   LIST_PADDING = 20
 
+  # Colour used for internal links. HTML colour code.
+  INTERNAL_LINK_COLOR = "0000FF"
+
+  # Colour used for external links. HTML colour code.
+  EXTERNAL_LINK_COLOR = "FF0000"
+
   def initialize(pdf, heading_level = 0, inputencoding = "UTF-8", markup = nil)
     super(markup)
 
@@ -90,8 +96,8 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     # Inline formatting directives as known by Prawn’s
     # inline formatter
     add_tag(:BOLD, "<b>", "</b>")
-    add_tag(:TT,   "<tt>", "</tt>")
-    add_tag(:EM,   "<it>", "</it>")
+    add_tag(:TT,   "<font name=\"#{MONO_FONT_NAME}\" size=\"#{BASE_FONT_SIZE - 1}\">", "</font>")
+    add_tag(:EM,   "<i>", "</i>")
 
     # Basic PDF adjustments
     @pdf.font_families.update(SERIF_FONT_NAME => SERIF_FONT_SPEC)
@@ -114,8 +120,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   end
 
   def accept_paragraph(par)
-    @pdf.text(par.text.chomp)
-    #TODO: Inline formatting via #to_prawn
+    @pdf.text(to_prawn(par.text.chomp), inline_format: true)
   end
 
   def accept_verbatim(ver)
@@ -195,22 +200,26 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @pdf.text(raw)
   end
 
-  def handle_special_HYPERLINK
-    # TODO
+  def handle_special_HYPERLINK(special)
+    make_url(special.text)
   end
 
-  def handle_special_RDOCLINK
-    # TODO
+  def handle_special_RDOCLINK(special)
+    "RDOCLINK: #{special.text}"
   end
 
-  def handle_special_TIDYLINK
-    # TODO
+  # Method copied from RDoc project and slightly modified.
+  #
+  # Handles hyperlinks of form {text}[url] and text[url].
+  def handle_special_TIDYLINK(special)
+    return special.text unless special.text =~ /\{(.*?)\}\[(.*?)\]/ or special.text =~ /(\S+)\[(.*?)\]/
+    make_url($2, $1)
   end
 
   private
 
   def to_prawn(item)
-    # TODO
+    convert_flow(@am.flow(item))
   end
 
   # Indents all following flow commands by +padding+ PDF points.
@@ -223,6 +232,15 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   # Undoes a previous #pdf_add_padding.
   def pdf_subtract_last_padding
     @pdf.bounds.subtract_left_padding(@paddings.pop)
+  end
+
+  def make_url(url, text = nil)
+    url = "http://#{url}" unless url =~ /^.*?:/
+    if text
+      "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><link href=\"#{url}\">#{text}</link></color>"
+    else
+      "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><link href=\"#{url}\">#{url}</link></color>"
+    end
   end
 
 end
