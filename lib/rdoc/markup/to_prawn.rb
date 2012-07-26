@@ -57,6 +57,11 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   #Default font size in pt.
   BASE_FONT_SIZE = 11
 
+  #Font size for all the monospaced stuff. Teletype fonts
+  #are usually larger, hence to ensure the overall text
+  #harmony, the teletyped part should be drawn smaller.
+  MONO_FONT_SIZE = BASE_FONT_SIZE - 1
+
   #Font sizes used for headings. The 1st element
   #of this array specified the size for a level 1 heading,
   #the 2nd that one for a level 2 heading, etc. Note that
@@ -96,7 +101,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     # Inline formatting directives as known by Prawn’s
     # inline formatter
     add_tag(:BOLD, "<b>", "</b>")
-    add_tag(:TT,   "<font name=\"#{MONO_FONT_NAME}\" size=\"#{BASE_FONT_SIZE - 1}\">", "</font>")
+    add_tag(:TT,   "<font name=\"#{MONO_FONT_NAME}\" size=\"#{MONO_FONT_SIZE}\">", "</font>")
     add_tag(:EM,   "<i>", "</i>")
 
     # Basic PDF adjustments
@@ -126,7 +131,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   def accept_verbatim(ver)
     @pdf.save_font do
       @pdf.font MONO_FONT_NAME
-      @pdf.text(ver.text.chomp, :size => BASE_FONT_SIZE - 1)
+      @pdf.text(ver.text.chomp, :size => MONO_FONT_SIZE)
     end
 
     # Some distance to the following text
@@ -239,7 +244,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     if text
       "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><link href=\"#{url}\">#{text}</link></color>"
     else
-      "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><link href=\"#{url}\">#{url}</link></color>"
+      "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><font name=\"#{MONO_FONT_NAME}\" size=\"#{MONO_FONT_SIZE - 1}\"><link href=\"#{url}\">#{url}</link></font></color>"
     end
   end
 
