@@ -182,9 +182,12 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     when :NOTE, :LABEL then
       # Determine the height the label would render to
       label_tokens = Prawn::Text::Formatted::Parser.to_array("<b><#{to_prawn(item.label)}</b>") # Labels are always bold, regardless of what the user sets
-      tb = Prawn::Text::Formatted::Box.new(label_tokens, document: @pdf, width: @pdf.bounds.width, at: [0, @pdf.cursor])
+      tb = Prawn::Text::Formatted::Box.new(label_tokens,
+                                           document: @pdf,
+                                           width: @pdf.bounds.width - 10, # -5pt left/-5pt right so it doesn’t touch the left/right border
+                                           at: [5, @pdf.cursor - 5]) # Place it at X=5 due to ↑ ## -5pt so it doesn’t touch the top border
       tb.render(dry_run: true)
-      height = tb.height
+      height = tb.height + 10 # +5pt top/+5pt bottom to prevent the text from touching the top/bottom border
 
       # Fill the area the label is going to occupy with a light
       # grey, then draw a border for the left, upper, and right
@@ -201,7 +204,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
       # Now draw the actual label on the prepared area.
       tb.render
 
-      # Continue below the text box
+      # Continue below the text box and border
       @pdf.move_down(height)
 
       # Remember current position (needed for drawing the side borders later on)
@@ -257,7 +260,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
             when start_page then # List’s first page
               @pdf.line([0, start_pos], [0, 0])                                 # Left border
               @pdf.line([@pdf.bounds.width, start_pos], [@pdf.bounds.width, 0]) # Right border
-            when last_page  then # List’s last page
+            when this_page  then # List’s last page
               @pdf.line([0, @pdf.bounds.height], [0, this_pos])                                 # Left border
               @pdf.line([@pdf.bounds.width, @pdf.bounds.height], [@pdf.bounds.width, this_pos]) # Right border
             else # Completely filled page
