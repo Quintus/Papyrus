@@ -26,6 +26,14 @@ require "rdoc/markup/inline"
 class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   include RDoc::Text
 
+  # Struct for saving information about used padding.
+  # +right_padding+ may be +nil+.
+  PaddingInfo = Struct.new(:left_padding, :right_padding)
+
+  # Struct for saving information about a position on a
+  # specific page.
+  PositionInfo = Struct.new(:page, :cursor)
+
   FONT_DIR = Pathname.new(__FILE__).dirname.expand_path.parent.parent.parent + "data" + "fonts"
 
   # Name of the serif font to use.
@@ -89,7 +97,12 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @pdf               = pdf
     @heading_level     = heading_level
     @inputencoding     = inputencoding
-    @lists_in_progress = []
+
+    # The following variables are the different stacks
+    # used when nesting lists. Each time a nest is done,
+    # something is pushed on this stack. On leaving a level,
+    # it is removed again.
+    @lists_in_progress = [] # Keeps track of the list type(s) we currently process
     @list_numbers      = [] # Keeps track of the labels of number lists
     @paddings          = [] # Keeps track of the indentation
     @note_positions    = [] # Keeps track of page and position in note lists
@@ -208,7 +221,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
       @pdf.move_down(height)
 
       # Remember current position (needed for drawing the side borders later on)
-      @note_positions.push([@pdf.page_count, @pdf.cursor])
+      @note_positions.push(PositionInfo.new(@pdf.page_count, @pdf.cursor))
       # Draw the top border
       @pdf.stroke{@pdf.horizontal_rule}
 
@@ -234,7 +247,8 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
       # continue later
       this_page, this_pos = @pdf.page_count, @pdf.cursor
       # Get the position where the list started
-      start_page, start_pos = @note_positions.pop
+      start_info = @note_positions.pop
+      start_page, start_pos = start_info.page, start_info.cursor
 
       if start_page == this_page
         # If no page borders were crossed for this note list,
@@ -323,16 +337,16 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   # Indents all following flow commands by +padding+ PDF points.
   # Call #pdf_subtract_last_padding to undo the effect.
   def pdf_add_padding(left_padding, right_padding = nil)
-    @paddings.push([left_padding, right_padding])
+    @paddings.push(PaddingInfo.new(left_padding, right_padding))
     @pdf.bounds.add_left_padding(left_padding)
     @pdf.bounds.add_right_padding(right_padding) if right_padding
   end
 
   # Undoes a previous #pdf_add_padding.
   def pdf_subtract_last_padding
-    left_padding, right_padding = @paddings.pop
-    @pdf.bounds.subtract_right_padding(right_padding) if right_padding
-    @pdf.bounds.subtract_left_padding(left_padding)
+    pad_info = @paddings.pop
+    @pdf.bounds.subtract_right_padding(pad_info.right_padding) if pad_info.right_padding
+    @pdf.bounds.subtract_left_padding(pad_info.left_padding)
   end
 
   def make_url(url, text = nil)
