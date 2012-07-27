@@ -49,6 +49,9 @@ class RDoc::Generator::Papyrus
   #Directory where the internal fonts are stored.
   FONT_DIR = DATA_DIR + "fonts"
 
+  # Number of PDF points to indent method descriptions.
+  METHOD_INDENTATION = 40
+
   class << self
 
     #Called by RDoc during option processing. Adds commandline
@@ -141,17 +144,22 @@ class RDoc::Generator::Papyrus
     end
 
     #Get the class, module and methods lists, sorted alphabetically by their full names
-    debug("Sorting classes, modules and methods")
+    debug("Sorting classes and modules")
     @classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
     @modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
     @classes_and_modules = @classes.concat(@modules).sort_by{|mod| mod.full_name}
-    @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort
+    # @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort
 
     @pdf = Prawn::Document.new
 
     debug "Evaluating toplevel files"
     @rdoc_files.each do |file|
       file.describe_in_pdf(@pdf)
+    end
+
+    debug "Evaluating classes and modules"
+    @classes_and_modules.each do |classmod|
+      document_classmod(classmod)
     end
 
     debug "Rendering PDF"
@@ -176,6 +184,90 @@ class RDoc::Generator::Papyrus
   #Invokes the class method ::debug.
   def debug(str = nil, &block)
     self.class.send(:debug, str, &block) #Private class method
+  end
+
+  # Outputs the documentation for the class or module +classmod+
+  # and all its methods.
+  def document_classmod(classmod)
+    @pdf.start_new_page
+
+    # "Class" or "Module" specifier above the heading
+    @pdf.font_size(RDoc::Markup::ToPrawn::HEADING_SIZES[4])
+    @pdf.font(RDoc::Markup::ToPrawn::SERIF_CAPS_FONT_NAME)
+    if classmod.module?
+      @pdf.text("Module")
+    else
+      @pdf.text("Class")
+    end
+
+    # The actual heading
+    pdf_heading(1, classmod.full_name)
+
+    # Overview
+    classmod.describe_in_pdf(@pdf)
+
+    # Methods
+    meths = classmod.methods_by_type
+
+    ["class", "instance"].each do |type| # Yes, RDoc uses strings here...
+      [:public, :protected, :private].each do |visibility| # ...and here it doesn’t.
+        unless meths[type][visibility].empty?
+          pdf_heading(2, "#{visibility.to_s.capitalize} #{type.capitalize} methods")
+          pdf_method_list(meths[type][visibility])
+        end
+      end
+    end
+  end
+
+  # Creates a heading of +level+ by changing font family and size,
+  # drawing the heading, and finally resetting family and size.
+  def pdf_heading(level, str)
+    # Set heading styles
+    @pdf.font_size(RDoc::Markup::ToPrawn::HEADING_SIZES[level])
+    @pdf.font(RDoc::Markup::ToPrawn::SANS_FONT_NAME)
+
+    # Output the actual heading
+    @pdf.text(str)
+
+    # Reset to base styles
+    @pdf.font(RDoc::Markup::ToPrawn::SERIF_FONT_NAME)
+    @pdf.font_size(RDoc::Markup::ToPrawn::BASE_FONT_SIZE)
+
+    # Some space after the heading for better look
+    @pdf.text("\n")
+  end
+
+  # Outputs a list of methods with names and descriptions.
+  def pdf_method_list(ary)
+    ary.sort_by(&:name).each do |method|
+      @pdf.group do
+        # Thick line at the top
+        orig_width = @pdf.line_width
+        @pdf.line_width = 4
+        @pdf.stroke_horizontal_rule
+        @pdf.line_width = orig_width
+
+        # Method name
+        @pdf.move_down(3) # Some distance so it doesn’t touch the line
+        @pdf.text(method.name, style: :bold)
+        @pdf.move_down(3) # Some distance so it doesn’t touch the line
+
+        #TODO: Create a right-aligned text box here and put the call-seq
+        #      there!
+
+        # Draw the final line here rather than in the #indent block below
+        # to ensure there’s no page break in the description header
+        @pdf.stroke_line([METHOD_INDENTATION, @pdf.cursor], [@pdf.bounds.width, @pdf.cursor])
+      end
+
+      # Actual method description
+      @pdf.indent(METHOD_INDENTATION) do
+        method.describe_in_pdf(@pdf)
+      end
+
+      # Some space so that it looks better
+      @pdf.text("\n")
+    end
   end
 
   #Generates a \hyperref with the given arguments. +show_page+ may be

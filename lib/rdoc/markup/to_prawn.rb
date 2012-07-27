@@ -48,6 +48,12 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
                      :bold_italic => FONT_DIR.join("LinLibertine_RBIah.ttf").to_s,
                      :normal      => FONT_DIR.join("LinLibertine_Rah.ttf").to_s}
 
+  # Name of the serif small-caps font to use.
+  SERIF_CAPS_FONT_NAME = "Libertine-Caps"
+
+  # Prawn font specification for the serif small-caps font defined above.
+  SERIF_CAPS_FONT_SPEC = {:normal => FONT_DIR.join("LinLibertine_aS.ttf").to_s}
+
   # Name of the sans-serif font to use.
   SANS_FONT_NAME = "Biolinum"
 
@@ -125,6 +131,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @pdf.font_families.update(SERIF_FONT_NAME => SERIF_FONT_SPEC)
     @pdf.font_families.update(SANS_FONT_NAME  => SANS_FONT_SPEC)
     @pdf.font_families.update(MONO_FONT_NAME  => MONO_FONT_SPEC)
+    @pdf.font_families.update(SERIF_CAPS_FONT_NAME => SERIF_CAPS_FONT_SPEC)
 
     # Set default font and size
     @pdf.font("Libertine")

@@ -78,45 +78,45 @@ end
 #  klass.send(:include, RDoc::Generator::PrawnMarkup) #private method
 #end
 
-class RDoc::AnyMethod
-  include Comparable
-  
-  #Compares two methods with each other. A method is considered smaller
-  #than another if it is a class method. If +self+ and +other+ are both
-  #of the same type (either "class" or "instance"), they’re compared
-  #alphabetically.
-  #==Parameter
-  #[other] The other method to compare with.
-  #==Return value
-  #-1 if +self+ is smaller than +other+, 0 if they’re equal and
-  #+1 if +self+ is bigger than +other+. +nil+ if +other+ isn’t
-  #a RDoc::AnyMethod.
-  #==Example
-  #  m1.name #=> foo
-  #  m1.type #=> instance
-  #  m2.name #=> bar
-  #  m2.type #=> instance
-  #  m3.name #=> foo
-  #  m3.type #=> class
-  #  
-  #  m1 <=> m2 #=> 1
-  #  m2 <=> m1 #=> -1
-  #  m1 <=> m3 #=> 1
-  #  m3 <=> m1 #=> -1
-  #  m2 <=> m2 #=> 0
-  def <=>(other)
-    return nil unless other.kind_of?(RDoc::AnyMethod)
-    
-    if type == "class" and other.type == "class" #RDoc uses strings, not symbols?
-      name <=> other.name
-    elsif type == "class" and other.type == "instance"
-      -1
-    elsif type == "instance" and other.type == "class"
-        1
-    elsif type == "instance" and other.type == "instance"
-      name <=> other.name
-    else #Shouldn’t be
-      nil
-    end
-  end
-end
+#class RDoc::AnyMethod
+#  include Comparable
+#  
+#  #Compares two methods with each other. A method is considered smaller
+#  #than another if it is a class method. If +self+ and +other+ are both
+#  #of the same type (either "class" or "instance"), they’re compared
+#  #alphabetically.
+#  #==Parameter
+#  #[other] The other method to compare with.
+#  #==Return value
+#  #-1 if +self+ is smaller than +other+, 0 if they’re equal and
+#  #+1 if +self+ is bigger than +other+. +nil+ if +other+ isn’t
+#  #a RDoc::AnyMethod.
+#  #==Example
+#  #  m1.name #=> foo
+#  #  m1.type #=> instance
+#  #  m2.name #=> bar
+#  #  m2.type #=> instance
+#  #  m3.name #=> foo
+#  #  m3.type #=> class
+#  #  
+#  #  m1 <=> m2 #=> 1
+#  #  m2 <=> m1 #=> -1
+#  #  m1 <=> m3 #=> 1
+#  #  m3 <=> m1 #=> -1
+#  #  m2 <=> m2 #=> 0
+#  def <=>(other)
+#    return nil unless other.kind_of?(RDoc::AnyMethod)
+#    
+#    if type == "class" and other.type == "class" #RDoc uses strings, not symbols?
+#      name <=> other.name
+#    elsif type == "class" and other.type == "instance"
+#      -1
+#    elsif type == "instance" and other.type == "class"
+#        1
+#    elsif type == "instance" and other.type == "instance"
+#      name <=> other.name
+#    else #Shouldn’t be
+#      nil
+#    end
+#  end
+#end
