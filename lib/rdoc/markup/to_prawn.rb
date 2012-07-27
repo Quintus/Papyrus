@@ -92,6 +92,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @lists_in_progress = []
     @list_numbers      = [] # Keeps track of the labels of number lists
     @paddings          = [] # Keeps track of the indentation
+    @note_positions    = [] # Keeps track of page and position in note lists
 
     # Copied from RDoc 3.12, adds link capabilities
     @markup.add_special(/((link:|https?:|mailto:|ftp:|irc:|www\.)\S+\w)/, :HYPERLINK)
@@ -151,44 +152,133 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
 
   def accept_list_start(list)
     @lists_in_progress.push(list.type)
+    if list.type == :LABEL || list.type == :NOTE
+      pdf_add_padding(LIST_PADDING, LIST_PADDING) # Labelled lists get both margins
+    else
+      pdf_add_padding(LIST_PADDING) # Other lists just a left one.
+    end
+
     @list_numbers << 0 if list.type == :NUMBER # Add a label number if we enter a NUMBER list
   end
 
   def accept_list_end(list)
+    pdf_subtract_last_padding
     @list_numbers.pop if @lists_in_progress.pop == :NUMBER # Remove a number if we leave a NUMBER list
   end
 
   def accept_list_item_start(item)
     case @lists_in_progress.last
     when :BULLET then
-      pdf_add_padding(LIST_PADDING)
-
       bullet_radius = @pdf.font.ascender / 5
       @pdf.fill do
         @pdf.circle([-bullet_radius - 5, @pdf.cursor - @pdf.font.ascender / 2], bullet_radius) # -5 ensures the bullet doesn’t touch the text
       end
     when :NUMBER then
-      pdf_add_padding(LIST_PADDING)
-
       # Increment the last number of the number label
       @list_numbers[-1] += 1
       label = "#{@list_numbers.join('.')}."
 
       @pdf.draw_text(label, at: [-@pdf.width_of(label) - 5, @pdf.cursor - @pdf.font.ascender]) # -5 ensures the label doesn’t touch the text
     when :NOTE, :LABEL then
-      label_width = @pdf.width_of(item.label, style: :bold) + 5 # +5 ensures the label doesn’t touch the text
-      pdf_add_padding(label_width)
+      # Determine the height the label would render to
+      label_tokens = Prawn::Text::Formatted::Parser.to_array("<b><#{to_prawn(item.label)}</b>") # Labels are always bold, regardless of what the user sets
+      tb = Prawn::Text::Formatted::Box.new(label_tokens, document: @pdf, width: @pdf.bounds.width, at: [0, @pdf.cursor])
+      tb.render(dry_run: true)
+      height = tb.height
 
-      @pdf.draw_text(item.label, at: [-label_width, @pdf.cursor - @pdf.font.ascender], style: :bold)
+      # Fill the area the label is going to occupy with a light
+      # grey, then draw a border for the left, upper, and right
+      # edges of the area. The bottom border is the same as
+      # the top border of the content box, which is drawn later
+      # on.
+      @pdf.fill_color = "DDDDDD"
+      @pdf.fill_rectangle([0, @pdf.cursor], @pdf.bounds.width, height)
+      @pdf.stroke_line([0, @pdf.cursor - height],[0, @pdf.cursor])
+      @pdf.stroke_line([0, @pdf.cursor], [@pdf.bounds.width, @pdf.cursor])
+      @pdf.stroke_line([@pdf.bounds.width, @pdf.cursor], [@pdf.bounds.width, @pdf.cursor - height])
+      @pdf.fill_color = "000000" # Reset colour
+
+      # Now draw the actual label on the prepared area.
+      tb.render
+
+      # Continue below the text box
+      @pdf.move_down(height)
+
+      # Remember current position (needed for drawing the side borders later on)
+      @note_positions.push([@pdf.page_count, @pdf.cursor])
+      # Draw the top border
+      @pdf.stroke{@pdf.horizontal_rule}
+
+      # Add some extra spacing to prevent the text from touching
+      # the border
+      pdf_add_padding(5, 5)
     #when :UALPHA then
     #when :LALPHA then
     else
-      raise("Unknown list type #@list_in_progress!")
+      raise("Unknown list type #{@lists_in_progress.last}!")
     end
   end
 
   def accept_list_item_end(item)
-    pdf_subtract_last_padding
+    if @lists_in_progress.last == :NOTE || @lists_in_progress.last == :LABEL
+      # Remove the extra spacing that prevents the text to
+      # not touch the border
+      pdf_subtract_last_padding
+
+      # Draw the bottom border
+      @pdf.stroke{@pdf.horizontal_rule}
+      # Remember the current position so that we know where to
+      # continue later
+      this_page, this_pos = @pdf.page_count, @pdf.cursor
+      # Get the position where the list started
+      start_page, start_pos = @note_positions.pop
+
+      if start_page == this_page
+        # If no page borders were crossed for this note list,
+        # we can just draw the side borders around the block
+        # of text.
+        @pdf.stroke do
+          @pdf.line([0, start_pos], [0, this_pos])                                 # Left border
+          @pdf.line([@pdf.bounds.width, start_pos], [@pdf.bounds.width, this_pos]) # Right border
+        end
+      else
+        # Otherwise, the list has been split over multiple pages.
+        # Now we need to draw the border from the list’s start to
+        # the start page’s bottom, around the sides of any completely
+        # filled pages, and from the last list page’s to the list’s end.
+        start_page.upto(this_page) do |pagenum|
+          # First, switch to the page we want to re-edit
+          @pdf.go_to_page(pagenum)
+
+          # Now, depending on which page we switched, draw the
+          # borders accordingly.
+          @pdf.stroke do
+            case pagenum
+            when start_page then # List’s first page
+              @pdf.line([0, start_pos], [0, 0])                                 # Left border
+              @pdf.line([@pdf.bounds.width, start_pos], [@pdf.bounds.width, 0]) # Right border
+            when last_page  then # List’s last page
+              @pdf.line([0, @pdf.bounds.height], [0, this_pos])                                 # Left border
+              @pdf.line([@pdf.bounds.width, @pdf.bounds.height], [@pdf.bounds.width, this_pos]) # Right border
+            else # Completely filled page
+              @pdf.line([0, @pdf.bounds.height], [0, 0])                                 # Left border
+              @pdf.line([@pdf.bounds.width, @pdf.bounds.height], [@pdf.bounds.width, 0]) # Right border
+            end #case
+          end #stroke
+        end #upto
+
+        # Restore the original position to allow the
+        # text flow to continue from there. Note that
+        # the above loop’s last iteration automatically
+        # restores `this_page' as the current page, so
+        # no need to do this again here.
+        @pdf.move_cursor_to(this_pos)
+
+        # Leave some space to prevent the following text from
+        # touching the bottom border.
+        @pdf.text("\n")
+      end #if start_page == this_page
+    end
   end
 
   def accept_blank_line(line)
@@ -229,14 +319,17 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
 
   # Indents all following flow commands by +padding+ PDF points.
   # Call #pdf_subtract_last_padding to undo the effect.
-  def pdf_add_padding(padding)
-    @paddings.push(padding)
-    @pdf.bounds.add_left_padding(padding)
+  def pdf_add_padding(left_padding, right_padding = nil)
+    @paddings.push([left_padding, right_padding])
+    @pdf.bounds.add_left_padding(left_padding)
+    @pdf.bounds.add_right_padding(right_padding) if right_padding
   end
 
   # Undoes a previous #pdf_add_padding.
   def pdf_subtract_last_padding
-    @pdf.bounds.subtract_left_padding(@paddings.pop)
+    left_padding, right_padding = @paddings.pop
+    @pdf.bounds.subtract_right_padding(right_padding) if right_padding
+    @pdf.bounds.subtract_left_padding(left_padding)
   end
 
   def make_url(url, text = nil)
