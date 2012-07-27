@@ -23,6 +23,8 @@ require "pathname"
 require "rdoc/markup/formatter"
 require "rdoc/markup/inline"
 
+# RDoc formatter than turns RDoc markup into a PDF file
+# by using the Prawn PDF library.
 class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   include RDoc::Text
 
@@ -34,6 +36,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   # specific page.
   PositionInfo = Struct.new(:page, :cursor)
 
+  # Directory where the font files reside.
   FONT_DIR = Pathname.new(__FILE__).dirname.expand_path.parent.parent.parent + "data" + "fonts"
 
   # Name of the serif font to use.
@@ -138,10 +141,12 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     # Nothing
   end
 
+  # Called for parsing a paragraph of text.
   def accept_paragraph(par)
     @pdf.text(to_prawn(par.text.chomp), inline_format: true)
   end
 
+  # Called for parsing a code block.
   def accept_verbatim(ver)
     @pdf.save_font do
       @pdf.font MONO_FONT_NAME
@@ -152,6 +157,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @pdf.text("\n")
   end
 
+  # Called for parsing a horizontal rule.
   def accept_rule(rule)
     orig_width      = @pdf.line_width
     @pdf.line_width = rule.weight
@@ -163,6 +169,8 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @pdf.line_width = orig_width
   end
 
+  # Called when any kind of list starts. Initialises list-specific
+  # variables.
   def accept_list_start(list)
     @lists_in_progress.push(list.type)
     if list.type == :LABEL || list.type == :NOTE
@@ -174,11 +182,14 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @list_numbers << 0 if list.type == :NUMBER # Add a label number if we enter a NUMBER list
   end
 
+  # Called when a list ends. Cleanup.
   def accept_list_end(list)
     pdf_subtract_last_padding
     @list_numbers.pop if @lists_in_progress.pop == :NUMBER # Remove a number if we leave a NUMBER list
   end
 
+  # Called when a list item starts. Draws the label/bullet/number and
+  # does some initialisation.
   def accept_list_item_start(item)
     case @lists_in_progress.last
     when :BULLET then
@@ -235,6 +246,8 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     end
   end
 
+  # Called when a list ends. Finishes any list decoration and
+  # cleans up.
   def accept_list_item_end(item)
     if @lists_in_progress.last == :NOTE || @lists_in_progress.last == :LABEL
       # Remove the extra spacing that prevents the text to
@@ -298,20 +311,24 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     end
   end
 
+  # Called for and inserts an empty line.
   def accept_blank_line(line)
     @pdf.text("\n")
   end
 
+  # Called for parsing a heading of any level.
   def accept_heading(head)
     @pdf.font_size HEADING_SIZES[head.level]
     @pdf.text(head.text)
     @pdf.font_size BASE_FONT_SIZE
   end
 
+  # Inserts raw text.
   def accept_raw(raw)
     @pdf.text(raw)
   end
 
+  # Handles the HYPERLINK special and turns it into a clickable URL.
   def handle_special_HYPERLINK(special)
     make_url(special.text)
   end
@@ -330,6 +347,8 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
 
   private
 
+  # Tokenises the inline markup in +item+ and calls the apropriate handlers
+  # on the calling instance.
   def to_prawn(item)
     convert_flow(@am.flow(item))
   end
@@ -349,6 +368,9 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @pdf.bounds.subtract_left_padding(pad_info.left_padding)
   end
 
+  # Creates a clickable URL. If +text+ is given, uses that as the
+  # label. Otherwise, just uses the link text as label and displays
+  # it in a monospaced font.
   def make_url(url, text = nil)
     url = "http://#{url}" unless url =~ /^.*?:/
     if text
