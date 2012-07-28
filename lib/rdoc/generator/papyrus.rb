@@ -247,13 +247,30 @@ class RDoc::Generator::Papyrus
         @pdf.stroke_horizontal_rule
         @pdf.line_width = orig_width
 
-        # Method name
-        @pdf.move_down(3) # Some distance so it doesn’t touch the line
-        @pdf.text(method.name, style: :bold)
-        @pdf.move_down(3) # Some distance so it doesn’t touch the line
+        @pdf.move_down(3) # Prevent method name and call sequence from touching the upper line
 
-        #TODO: Create a right-aligned text box here and put the call-seq
-        #      there!
+        # Method name (1/2 of the available width)
+        @pdf.text_box(method.name,
+                      at:       [0, @pdf.cursor],
+                      width:    0.5 * @pdf.bounds.width,
+                      height:   @pdf.height_of("\n"),
+                      style:    :bold,
+                      overflow: :shrink_to_fit)
+
+        # Call sequence (1/2 of the available width)
+        tb = Prawn::Text::Box.new(method.arglists,
+                                  document: @pdf,
+                                  at:       [0.5 * @pdf.bounds.width, @pdf.cursor],
+                                  width:    0.5 * @pdf.bounds.width,
+                                  align:    :right,
+                                  size:     RDoc::Markup::ToPrawn::BASE_FONT_SIZE - 1,
+                                  overflow: :shrink_to_fit)
+        tb.render
+
+        # Move the cursor below the call sequence box, plus a slight
+        # distance to prevent the following line to touch the method
+        # name, text.
+        @pdf.move_down(tb.height + 3)
 
         # Draw the final line here rather than in the #indent block below
         # to ensure there’s no page break in the description header
