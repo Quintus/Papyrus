@@ -39,11 +39,22 @@ module RDoc::Generator::PrawnMarkup
   # Prawn::Document instances. Otherwise, just returns
   # the already intanciates formatter.
   def formatter(pdf = nil)
-    return @formatter if defined?(@formatter)
-    raise(ArgumentError, "Cannot instanciate formatter without PDF!") unless pdf
+    if defined?(@formatter)
+      # The formatter may be re-used with a different
+      # Prawn::Document PDF object.
+      @formatter.pdf = pdf if pdf
+      return @formatter
+    else
+      raise(ArgumentError, "Cannot instanciate formatter without PDF!") unless pdf
+    end
 
-    # @formatter = RDoc::Markup::ToPrawnCrossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
-    @formatter = RDoc::Markup::ToPrawn.new(pdf, current_heading_level, "UTF-8")
+    @formatter = RDoc::Markup::ToPrawn_Crossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
+                                                    pdf,
+                                                    current_heading_level,
+                                                    "UTF-8",
+                                                    false, # show_hash
+                                                    false) # hyperlink_all
+    # @formatter = RDoc::Markup::ToPrawn.new(pdf, current_heading_level, "UTF-8")
   end
 
   # The heading level we’re currently in. Instead of directly using
@@ -60,6 +71,21 @@ module RDoc::Generator::PrawnMarkup
     when RDoc::MethodAttr, RDoc::Alias, RDoc::Constant, RDoc::Include then 3
     else
       0
+    end
+  end
+
+  # PDF destination name to use if you want to reference
+  # this object. The reference has to be set before you
+  # can refer to it.
+  def anchor
+    case self
+    when RDoc::ClassModule then "classmod-#{full_name}"
+    when RDoc::Constant    then "const-#{parent.full_name}-#{name}"
+    when RDoc::TopLevel    then "toplevel-#{relative_name}"
+    when RDoc::Alias       then "alias-#{parent.full_name}-#{new_name}"
+    when RDoc::AnyMethod   then "method-#{parent.full_name}-#{pretty_name}"
+    else
+      raise("Cannot create anchors to objects of class #{self.class}!")
     end
   end
 

@@ -120,7 +120,7 @@ class RDoc::Generator::Papyrus
     #effectively eliminating the possibility to generate anything
     #other than LaTeX output due to the overwrites the
     #RDoc::Generator::LaTeX_Markup module does.
-    require_relative "../markup/to_prawn"
+    require_relative "../markup/to_prawn_crossref"
     require_relative "prawn_markup"
     
     @options = options
@@ -150,16 +150,56 @@ class RDoc::Generator::Papyrus
     @classes_and_modules = @classes.concat(@modules).sort_by{|mod| mod.full_name}
     # @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort
 
-    @pdf = Prawn::Document.new
+    @pdf = nil
+    2.times do |i| # Two times for resolving all references
+      puts "Constructing PDF..."
+      @pdf = Prawn::Document.new
 
-    debug "Evaluating toplevel files"
-    @rdoc_files.each do |file|
-      file.describe_in_pdf(@pdf)
-    end
+      # Register our font families
+      @pdf.font_families.update(RDoc::Markup::ToPrawn::SERIF_FONT_NAME => RDoc::Markup::ToPrawn::SERIF_FONT_SPEC)
+      @pdf.font_families.update(RDoc::Markup::ToPrawn::SANS_FONT_NAME  => RDoc::Markup::ToPrawn::SANS_FONT_SPEC)
+      @pdf.font_families.update(RDoc::Markup::ToPrawn::MONO_FONT_NAME  => RDoc::Markup::ToPrawn::MONO_FONT_SPEC)
+      @pdf.font_families.update(RDoc::Markup::ToPrawn::SERIF_CAPS_FONT_NAME => RDoc::Markup::ToPrawn::SERIF_CAPS_FONT_SPEC)
+      @pdf.font("Libertine")
+      @pdf.font_size RDoc::Markup::ToPrawn::BASE_FONT_SIZE
 
-    debug "Evaluating classes and modules"
-    @classes_and_modules.each do |classmod|
-      document_classmod(classmod)
+      debug "Evaluating toplevel files"
+      @rdoc_files.each do |file|
+        file.describe_in_pdf(@pdf)
+      end
+
+      debug "Evaluating classes and modules"
+      @classes_and_modules.each do |classmod|
+        document_classmod(classmod)
+      end
+
+      if RDoc::Markup::ToPrawn_Crossref.unresolved_pdf_references.empty?
+        # No unresolved references. No need for the second run.
+        break
+      else
+        if i.zero?
+          # Undefined references found during the first run.
+          # This is OK, try to resolve them
+          # by generating the document a second time under
+          # use of the now completely built-up reference
+          # tree.
+          puts "Undefined page references found."
+          puts "Processing the document a second time to resolve them."
+
+          # Empty the array of undefined references to
+          # avoid confusion of references being not resolvable
+          # even after the second run.
+          RDoc::Markup::ToPrawn_Crossref.unresolved_pdf_references.clear
+        else
+          # Uh-oh, undefined references in the second run are bad.
+          puts "There were undefined page references."
+          puts "This may be a bug in Papyrus. File a ticket"
+          puts "on our bugtracker and provide your sources and"
+          puts "this list of undefined references:"
+          puts RDoc::Markup::ToPrawn_Crossref.unresolved_pdf_references.join(", ")
+        end
+      end
+
     end
 
     debug "Rendering PDF"
@@ -189,7 +229,12 @@ class RDoc::Generator::Papyrus
   # Outputs the documentation for the class or module +classmod+
   # and all its methods.
   def document_classmod(classmod)
+    # Start a new class/module documentation always
+    # on a new page and add the PDF destination for
+    # this class/module to the list of known PDF
+    # references.
     @pdf.start_new_page
+    RDoc::Markup::ToPrawn_Crossref.add_pdf_reference(@pdf, classmod.anchor, @pdf.page_count)
 
     # "Class" or "Module" specifier above the heading
     @pdf.font_size(RDoc::Markup::ToPrawn::HEADING_SIZES[4])
@@ -213,10 +258,61 @@ class RDoc::Generator::Papyrus
       [:public, :protected, :private].each do |visibility| # ...and here it doesn’t.
         unless meths[type][visibility].empty?
           pdf_heading(2, "#{visibility.to_s.capitalize} #{type.capitalize} methods")
-          pdf_method_list(meths[type][visibility])
+          meths[type][visibility].sort_by(&:name).each{|m| document_method(m)}
         end
       end
     end
+  end
+
+  # Outputs the documentation for +method+ onto the PDF.
+  def document_method(method)
+    # @pdf.group do
+      # Thick line at the top
+      orig_width = @pdf.line_width
+      @pdf.line_width = 4
+      @pdf.stroke_horizontal_rule
+      @pdf.line_width = orig_width
+
+      @pdf.move_down(3) # Prevent method name and call sequence from touching the upper line
+
+      # Register the PDF destination for this method
+      RDoc::Markup::ToPrawn_Crossref.add_pdf_reference(@pdf, method.anchor, @pdf.page_count)
+
+      # Method name (1/2 of the available width)
+      @pdf.text_box(method.name,
+                    at:       [0, @pdf.cursor],
+                    width:    0.5 * @pdf.bounds.width,
+                    height:   @pdf.height_of("\n"),
+                    style:    :bold,
+                    overflow: :shrink_to_fit)
+
+      # Call sequence (1/2 of the available width)
+      tb = Prawn::Text::Box.new(method.arglists,
+                                document: @pdf,
+                                at:       [0.5 * @pdf.bounds.width, @pdf.cursor],
+                                width:    0.5 * @pdf.bounds.width,
+                                align:    :right,
+                                size:     RDoc::Markup::ToPrawn::BASE_FONT_SIZE - 1,
+                                overflow: :shrink_to_fit)
+      tb.render
+
+      # Move the cursor below the call sequence box, plus a slight
+      # distance to prevent the following line to touch the method
+      # name, text.
+      @pdf.move_down(tb.height + 3)
+
+      # Draw the final line here rather than in the #indent block below
+      # to ensure there’s no page break in the description header
+      @pdf.stroke_line([METHOD_INDENTATION, @pdf.cursor], [@pdf.bounds.width, @pdf.cursor])
+    # end
+
+    # Actual method description
+    @pdf.indent(METHOD_INDENTATION) do
+      method.describe_in_pdf(@pdf)
+    end
+
+    # Some space so that it looks better
+    @pdf.text("\n")
   end
 
   # Creates a heading of +level+ by changing font family and size,
@@ -235,56 +331,6 @@ class RDoc::Generator::Papyrus
 
     # Some space after the heading for better look
     @pdf.text("\n")
-  end
-
-  # Outputs a list of methods with names and descriptions.
-  def pdf_method_list(ary)
-    ary.sort_by(&:name).each do |method|
-      @pdf.group do
-        # Thick line at the top
-        orig_width = @pdf.line_width
-        @pdf.line_width = 4
-        @pdf.stroke_horizontal_rule
-        @pdf.line_width = orig_width
-
-        @pdf.move_down(3) # Prevent method name and call sequence from touching the upper line
-
-        # Method name (1/2 of the available width)
-        @pdf.text_box(method.name,
-                      at:       [0, @pdf.cursor],
-                      width:    0.5 * @pdf.bounds.width,
-                      height:   @pdf.height_of("\n"),
-                      style:    :bold,
-                      overflow: :shrink_to_fit)
-
-        # Call sequence (1/2 of the available width)
-        tb = Prawn::Text::Box.new(method.arglists,
-                                  document: @pdf,
-                                  at:       [0.5 * @pdf.bounds.width, @pdf.cursor],
-                                  width:    0.5 * @pdf.bounds.width,
-                                  align:    :right,
-                                  size:     RDoc::Markup::ToPrawn::BASE_FONT_SIZE - 1,
-                                  overflow: :shrink_to_fit)
-        tb.render
-
-        # Move the cursor below the call sequence box, plus a slight
-        # distance to prevent the following line to touch the method
-        # name, text.
-        @pdf.move_down(tb.height + 3)
-
-        # Draw the final line here rather than in the #indent block below
-        # to ensure there’s no page break in the description header
-        @pdf.stroke_line([METHOD_INDENTATION, @pdf.cursor], [@pdf.bounds.width, @pdf.cursor])
-      end
-
-      # Actual method description
-      @pdf.indent(METHOD_INDENTATION) do
-        method.describe_in_pdf(@pdf)
-      end
-
-      # Some space so that it looks better
-      @pdf.text("\n")
-    end
   end
 
   #Generates a \hyperref with the given arguments. +show_page+ may be

@@ -101,6 +101,20 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   # Colour used for external links. HTML colour code.
   EXTERNAL_LINK_COLOR = "FF0000"
 
+  # The PDF file this formatting wil output to,
+  # a Prawn::Document object.
+  attr_accessor :pdf
+
+  # Create a new ToPrawn formatter.
+  #
+  # == Parameters
+  # [pdf]
+  #   The Prawn::Document to output to. Note that
+  #   this method doesn’t do any initialisation on
+  #   that object, so you have to add the font families
+  #   required by this formatter (see constants), set the
+  #   default font size, etc. before you pass the object
+  #   to this method.
   def initialize(pdf, heading_level = 0, inputencoding = "UTF-8", markup = nil)
     super(markup)
 
@@ -127,16 +141,6 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     add_tag(:BOLD, "<b>", "</b>")
     add_tag(:TT,   "<font name=\"#{MONO_FONT_NAME}\" size=\"#{MONO_FONT_SIZE}\">", "</font>")
     add_tag(:EM,   "<i>", "</i>")
-
-    # Basic PDF adjustments
-    @pdf.font_families.update(SERIF_FONT_NAME => SERIF_FONT_SPEC)
-    @pdf.font_families.update(SANS_FONT_NAME  => SANS_FONT_SPEC)
-    @pdf.font_families.update(MONO_FONT_NAME  => MONO_FONT_SPEC)
-    @pdf.font_families.update(SERIF_CAPS_FONT_NAME => SERIF_CAPS_FONT_SPEC)
-
-    # Set default font and size
-    @pdf.font("Libertine")
-    @pdf.font_size BASE_FONT_SIZE
   end
 
   #First method called.
@@ -386,6 +390,17 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
       "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><link href=\"#{url}\">#{text}</link></color>"
     else
       "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><font name=\"#{MONO_FONT_NAME}\" size=\"#{MONO_FONT_SIZE - 1}\"><link href=\"#{url}\">#{url}</link></font></color>"
+    end
+  end
+
+  #If RDoc is invoked in debug mode, writes out +str+ using
+  #+puts+ (prepending "[papyrus] ") and calls it’s block
+  #if one was given. If RDoc isn’t invoked in debug mode,
+  #does nothing.
+  def debug(str = nil)
+    if $DEBUG_RDOC
+      puts "[papyrus] #{str}" if str
+      yield if block_given?
     end
   end
 
