@@ -297,13 +297,17 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
       if dest_page = self.class.resolve_pdf_reference!(resolved.anchor) # Single = intended
         # Destination page is known
         if @show_pages
-          "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color> (p. <color rgb=\"#{INTERNAL_LINK_COLOR}\">#{dest_page}</color>)"
+          "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color> [p. <color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{dest_page}</link></color>]"
         else
           "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color>"
         end
       else # Destination page is not known
         debug("Unresolved PDF reference to #{resolved.anchor}")
-        display_name + " (p. ???)"
+        if @show_pages
+          display_name + " (p. ???)"
+        else
+          dispaly_name
+        end
       end
     end
   end

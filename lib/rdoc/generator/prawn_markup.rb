@@ -51,10 +51,10 @@ module RDoc::Generator::PrawnMarkup
     @formatter = RDoc::Markup::ToPrawn_Crossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
                                                     pdf,
                                                     current_heading_level,
-                                                    "UTF-8",
-                                                    false, # show_hash
-                                                    false) # hyperlink_all
-    # @formatter = RDoc::Markup::ToPrawn.new(pdf, current_heading_level, "UTF-8")
+                                                    RDoc::RDoc.current.options.inputencoding,
+                                                    RDoc::RDoc.current.options.show_hash,
+                                                    RDoc::RDoc.current.options.show_pages,
+                                                    RDoc::RDoc.current.options.hyperlink_all)
   end
 
   # The heading level we’re currently in. Instead of directly using

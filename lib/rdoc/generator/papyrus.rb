@@ -3,7 +3,7 @@
 # This file is part of Papyrus.
 #
 # Papyrus is a RDoc plugin for generating PDF files.
-# Copyright © 2012 Pegasus Alpha
+# Copyright © 2011, 2012 Pegasus Alpha
 #
 # Papyrus is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ gem "rdoc"
 require "prawn"
 require "rdoc/rdoc"
 require "rdoc/generator"
-require_relative "papyrus/options" #Rest required in #initialize
 
 class RDoc::Generator::Papyrus
 
@@ -58,40 +57,32 @@ class RDoc::Generator::Papyrus
     #switches specific to this generator.
     #==Parameter
     #[options] The yet unparsed RDoc::Options.
-    #def setup_options(options)
-    #  debug("Teaching new options to RDoc")
-    #  #Define the methods to get and set the options
-    #  options.extend(RDoc::Generator::Papyrus::Options)
-    #
-    #  options.option_parser.separator ""
-    #  options.option_parser.separator "Papyrus generator options:"
-    #  options.option_parser.separator ""
-    #
-    #  #Define the options themselves
-    #  options.option_parser.on("--[no-]show-pages", "Enables or disables page", "numbers following hyperlinks (default true).") do |val|
-    #    debug("Found --show-pages: #{val}")
-    #    options.show_pages = val
-    #  end
-    #  options.option_parser.on("--latex-command=VALUE", " Sets the command to run", "LaTeX (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_LATEX_COMMAND}')") do |val|
-    #    debug("Found --latex-command: #{val}")
-    #    options.latex_command = val
-    #  end
-    #  options.option_parser.on("--babel-lang=VALUE", "Sets the language option", "for babel (defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_BABEL_LANG}')") do |val|
-    #    debug("Found --babel-lang: #{val}")
-    #    options.babel_lang = val
-    #  end
-    #
-    #  options.option_parser.on("--inputencoding", "Sets the encoding used for the input files.", "Defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_INPUT_ENCODING}'.") do |val|
-    #    debug("Found --inputencoding: #{val}")
-    #    options.inputencoding = val
-    #  end
-    #
-    #  options.option_parser.on("--[no-]append-source",
-    #                           "If set, the sourcecode of all methods is included", 
-    #                           "as an appendix (warning: HUGE PDF", 
-    #                           "files can be the result! Default: false."){|val| options.append_source = val}
-    #
-    #end
+    def setup_options(options)
+      debug("Teaching new options to RDoc")
+      #Define the methods to get and set the options
+      options.extend(RDoc::Generator::Papyrus::Options)
+    
+      options.option_parser.separator ""
+      options.option_parser.separator "Papyrus generator options:"
+      options.option_parser.separator ""
+    
+      #Define the options themselves
+      options.option_parser.on("--[no-]show-pages", "Enables or disables page", "numbers following hyperlinks (default true).") do |val|
+        debug("Found --show-pages: #{val}")
+        options.show_pages = val
+      end
+    
+      options.option_parser.on("--inputencoding", "Sets the encoding used for the input files.", "Defaults to '#{RDoc::Generator::Papyrus::Options::DEFAULT_INPUT_ENCODING}'.") do |val|
+        debug("Found --inputencoding: #{val}")
+        options.inputencoding = val
+      end
+    
+      options.option_parser.on("--[no-]append-source",
+                               "If set, the sourcecode of all methods is included", 
+                               "as an appendix (warning: HUGE PDF", 
+                               "files can be the result! Default: false."){|val| options.append_source = val}
+    
+    end
 
     private
 
@@ -428,3 +419,5 @@ class RDoc::Generator::Papyrus
   #end
   
 end
+
+require_relative "papyrus/options" #Rest required in #initialize
