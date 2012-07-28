@@ -43,9 +43,16 @@ module RDoc::Generator::PrawnMarkup
     raise(ArgumentError, "Cannot instanciate formatter without PDF!") unless pdf
 
     # @formatter = RDoc::Markup::ToPrawnCrossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
-    @formatter = RDoc::Markup::ToPrawn.new(pdf, 0, "UTF-8")
+    @formatter = RDoc::Markup::ToPrawn.new(pdf, current_heading_level, "UTF-8")
   end
 
+  # The heading level we’re currently in. Instead of directly using
+  # the heading level the user provides (by the number of leading
+  # equation signs), we add the value returned by this method to
+  # the heading level (in ToPrawn#accept_heading). This way, it
+  # is possible to use e.g. a level-3 heading in a method documentation,
+  # which is then smaller than a level-3 heading in a class documentation
+  # or a toplevel file.
   def current_heading_level
     case self
     when RDoc::TopLevel then 0

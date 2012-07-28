@@ -89,6 +89,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
                    18,
                    16,
                    14,
+                   13,
                    12]
 
   #Number of PDF points to indent when a list ist encountered.
@@ -325,9 +326,10 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
 
   # Called for parsing a heading of any level.
   def accept_heading(head)
-    @pdf.font_size HEADING_SIZES[head.level]
+    @pdf.font_size HEADING_SIZES[@heading_level + head.level] # Relative heading sizes allow us to use smaller headings e.g. in methods. See PrawnMarkup#current_heading_level for the calculation.
     @pdf.text(head.text)
     @pdf.font_size BASE_FONT_SIZE
+    @pdf.text("\n") # Some space, looks better
   end
 
   # Inserts raw text.
