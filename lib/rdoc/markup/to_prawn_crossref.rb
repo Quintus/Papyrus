@@ -193,6 +193,40 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     end
   end
 
+  # Creates a new ToPrawn_Crossref formatter.
+  #
+  # == Parameters
+  # [context]
+  #   The RDoc::Context relative to which this formatter
+  #   will resolve cross-references.
+  # [pdf]
+  #   The Prawn::Document to output to. Note that
+  #   this method doesn’t do any initialisation on
+  #   that object, so you have to add the font families
+  #   required by this formatter (see constants), set the
+  #   default font size, etc. before you pass the object
+  #   to this method.
+  # [heading_level (0)]
+  #   The relative heading level. This value is added to
+  #   the heading level the user requests to prevent
+  #   huge headings in contexts like method documentation.
+  # [inputencoding ("UTF-8")]
+  #   Not used currently.
+  # [show_hash (false)]
+  #   Show the hash signs # in front of instance methods when
+  #   linking to them if true.
+  # [show_pages (false)]
+  #   If true, add a short page indicator after each cross-reference
+  #   link. This allows you to print the documentation without
+  #   loosing cross-referencing facilities (remember: Hypertext
+  #   links don’t work on real paper! ;-))
+  # [hyperlink_all (false)]
+  #   Link everything that cannot hide fast enough. This
+  #   will try to link to methods without the leading hash
+  #   sign (creating a huge number of false positives) and
+  #   tries to find cross-referencing names everywhere.
+  # [markup (nil)]
+  #   Passed on to the superclass.
   def initialize(context, pdf, heading_level = 0, inputencoding = "UTF-8", show_hash = false, show_pages = true, hyperlink_all = false, markup = nil)
     super(pdf, heading_level, inputencoding, markup)
 
@@ -207,6 +241,8 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     else
       @markup.add_special(RDoc::CrossReference::CROSSREF_REGEXP, :CROSSREF)
     end
+
+    @markup.add_special(/rdoc-ref:\S\w/, :RDOCLINK)
   end
 
   # call-seq:
@@ -240,7 +276,7 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     @hyperlink_all
   end
 
-  # Handles encounered cross references.
+  # Handles encountered cross references.
   def handle_special_CROSSREF(special)
     # If we aren’t instructed to try resolving all possibilities,
     # we won’t resolve all-lowercase words (which may be false
@@ -250,6 +286,11 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     end
 
     make_crossref(special.text)
+  end
+
+  # Handles encountered links of type rdoc-ref:.
+  def handle_special_RDOCLINK(special)
+    make_crossref(special.match(/^rdoc-ref:/).post_match)
   end
 
   private

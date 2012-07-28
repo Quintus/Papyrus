@@ -115,6 +115,14 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   #   required by this formatter (see constants), set the
   #   default font size, etc. before you pass the object
   #   to this method.
+  # [heading_level (0)]
+  #   The relative heading level. This value is added to
+  #   the heading level the user requests to prevent
+  #   huge headings in contexts like method documentation.
+  # [inputencoding ("UTF-8")]
+  #   Not used currently.
+  # [markup (nil)]
+  #   Passed on to the superclass.
   def initialize(pdf, heading_level = 0, inputencoding = "UTF-8", markup = nil)
     super(markup)
 
@@ -133,7 +141,6 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
 
     # Copied from RDoc 3.12, adds link capabilities
     @markup.add_special(/((link:|https?:|mailto:|ftp:|irc:|www\.)\S+\w)/, :HYPERLINK)
-    @markup.add_special(/rdoc-[a-z]+:\S+/, :RDOCLINK)
     @markup.add_special(/(((\{.*?\})|\b\S+?)\[\S+?\])/, :TIDYLINK)
 
     # Inline formatting directives as known by Prawn’s
@@ -344,10 +351,6 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   # Handles the HYPERLINK special and turns it into a clickable URL.
   def handle_special_HYPERLINK(special)
     make_url(special.text)
-  end
-
-  def handle_special_RDOCLINK(special)
-    "RDOCLINK: #{special.text}"
   end
 
   # Method copied from RDoc project and slightly modified.
