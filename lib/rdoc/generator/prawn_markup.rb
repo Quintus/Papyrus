@@ -48,13 +48,13 @@ module RDoc::Generator::PrawnMarkup
       raise(ArgumentError, "Cannot instanciate formatter without PDF!") unless pdf
     end
 
-    @formatter = RDoc::Markup::ToPrawn_Crossref.new(self.kind_of?(RDoc::Context) ? self : @parent, #Thanks to RDoc for this
-                                                    pdf,
-                                                    current_heading_level,
-                                                    RDoc::RDoc.current.options.inputencoding,
-                                                    RDoc::RDoc.current.options.show_hash,
-                                                    RDoc::RDoc.current.options.show_pages,
-                                                    RDoc::RDoc.current.options.hyperlink_all)
+    @formatter = RDoc::Markup::ToPrawn.new(self.kind_of?(RDoc::Context) ? self : @parent, # Thanks to RDoc for this
+                                           pdf,
+                                           current_heading_level,
+                                           RDoc::RDoc.current.options.inputencoding,
+                                           RDoc::RDoc.current.options.show_hash,
+                                           RDoc::RDoc.current.options.show_pages,
+                                           RDoc::RDoc.current.options.hyperlink_all)
   end
 
   # The heading level we’re currently in. Instead of directly using

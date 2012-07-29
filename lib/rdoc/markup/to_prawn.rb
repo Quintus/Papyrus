@@ -22,11 +22,13 @@ gem "rdoc"
 require "pathname"
 require "rdoc/markup/formatter"
 require "rdoc/markup/inline"
+require_relative "prawn_cross_referencing"
 
 # RDoc formatter than turns RDoc markup into a PDF file
 # by using the Prawn PDF library.
 class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   include RDoc::Text
+  include RDoc::Markup::PrawnCrossReferencing
 
   # Struct for saving information about used padding.
   # +right_padding+ may be +nil+.
@@ -95,10 +97,9 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   #Number of PDF points to indent when a list ist encountered.
   LIST_PADDING = 20
 
-  # Colour used for internal links. HTML colour code.
-  INTERNAL_LINK_COLOR = "0000FF"
-
   # Colour used for external links. HTML colour code.
+  # See PrawnCrossReferencing::INTERNAL_LINK_COLOR for
+  # the colour used for internal links.
   EXTERNAL_LINK_COLOR = "FF0000"
 
   # The PDF file this formatting wil output to,
@@ -108,6 +109,9 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   # Create a new ToPrawn formatter.
   #
   # == Parameters
+  # [context]
+  #   The RDoc::Context to cross-references are resolved
+  #   from relatively.
   # [pdf]
   #   The Prawn::Document to output to. Note that
   #   this method doesn’t do any initialisation on
@@ -121,14 +125,32 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   #   huge headings in contexts like method documentation.
   # [inputencoding ("UTF-8")]
   #   Not used currently.
+  # [show_hash (false)]
+  #   Show the hash signs # behind cross-references to
+  #   instance methods even if you don’t wrote them in
+  #   the markup.
+  # [show_pages (true)]
+  #   Print the page numbers cross-references refer to
+  #   behind those in brackets.
+  # [hyperlink_all (false)]
+  #   Go mad and try to crossref everything. Generates lots
+  #   of false positives.
   # [markup (nil)]
   #   Passed on to the superclass.
-  def initialize(pdf, heading_level = 0, inputencoding = "UTF-8", markup = nil)
+  def initialize(context, pdf, heading_level = 0, inputencoding = "UTF-8", show_hash = false, show_pages = true, hyperlink_all = false, markup = nil)
+    @context       = context
+    @pdf           = pdf
+    @heading_level = heading_level
+    @inputencoding = inputencoding
+    @show_hash     = show_hash
+    @show_pages    = show_pages
+    @hyperlink_all = hyperlink_all
+
+    # Call super after this initialisation. This is necessary,
+    # because the PrawnCrossReferencing module uses some methods
+    # from us that would otherwise return nil.
     super(markup)
 
-    @pdf               = pdf
-    @heading_level     = heading_level
-    @inputencoding     = inputencoding
 
     # The following variables are the different stacks
     # used when nesting lists. Each time a nest is done,
@@ -148,6 +170,31 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     add_tag(:BOLD, "<b>", "</b>")
     add_tag(:TT,   "<font name=\"#{MONO_FONT_NAME}\" size=\"#{MONO_FONT_SIZE}\">", "</font>")
     add_tag(:EM,   "<i>", "</i>")
+  end
+
+  # Interface for PrawnCrossReference. Whether to
+  # show hashes before cross referenced methods.
+  def show_hash?
+    @show_hash
+  end
+
+  # Interface for PrawnCrossReference. Whether to
+  # show page numbers behind cross references.
+  def show_pages?
+    @show_pages
+  end
+
+  # Interface for PrawnCrossReference. Whether to
+  # try hyperlinking everything.
+  def hyperlink_all?
+    @hyperlink_all
+  end
+
+  # Interface for PrawnCrossReference. Returns the
+  # RDoc::Context this formatter shall resolve
+  # cross-references relative to.
+  def context
+    @context
   end
 
   #First method called.
@@ -361,13 +408,13 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     make_url($2, $1)
   end
 
-  private
-
   # Tokenises the inline markup in +item+ and calls the apropriate handlers
   # on the calling instance.
   def to_prawn(item)
     convert_flow(@am.flow(item))
   end
+
+  private
 
   # Indents all following flow commands by +padding+ PDF points.
   # Call #pdf_subtract_last_padding to undo the effect.

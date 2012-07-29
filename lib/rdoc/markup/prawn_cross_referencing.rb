@@ -21,13 +21,54 @@
 require "rdoc/cross_reference"
 require_relative "to_prawn"
 
-# RDoc formatter that extends the ToPrawn formatter with
-# cross-referencing facilities.
+# Mixin module for RDoc formatters. It adds specials for
+# recognising cross-references and converts them to
+# Prawn’s inline markup tags (namely the +link+ tag).
+#
+# == Interface
+# This mixin requires you to define a few methods it makes
+# use of to properly integrate in your formatter. Namely
+# you have to define the following instance methods on
+# your formatter:
+#
+# [#context]
+#   This method is intended to return the RDoc::Context
+#   you’re currently in. From this context all cross-
+#   references will be resolved.
+# [#hyperlink_all?]
+#   If this returns +true+, tries a more liberal search
+#   for cross-references than the default. Usually this
+#   results in a huge number of false positives being
+#   created, as common words, which are normally not used
+#   for cross-referencing, will be considered when you
+#   enable this.
+# [#show_hash?]
+#   If this returns +true+, the cross-references for
+#   instance methods will always have a leading
+#   hash sign #, even if the original markup didn’t
+#   specify one.
+# [#show_pages?]
+#   If this returns +true+, a short page marker in
+#   brackets will be placed behind every cross
+#   reference.
+#
+# Ensure that these methods return a meaningful
+# value before you execute the call to +super+ in your
+# #initialize method, because this will trigger the
+# #initialize method of this module, which in turn will
+# execute some calls to the methods listed above. This
+# module will forward your call to +super+ to the next
+# ancestor, so don’t worry your parameters won’t get
+# through. And, please note you *have* to call +super+
+# in your formatter’s +initialize+. If you don’t, you
+# won’t get any cross-referencing facilities, because
+# this module’s +initialize+ adds the necessary RDoc
+# specials to your formatter.
 #
 # == The cross-reference mechanism
-# To proplerly resolve the cross-references (including
+# To properly resolve the cross-references (including
 # display of a page number in brackets if requested by
-# the +show_pages+ option), this class employs a
+# the +show_pages+ option), this module employs a
 # complex two-run mechanism. This is necessary because
 # when a target may first be referenced in the documentation
 # somewhere, it may not be defined. For example, if you
@@ -44,7 +85,7 @@ require_relative "to_prawn"
 # For this to work, we first need to keep track of the
 # pages the PDF destinations are defined for. Although
 # the underlying Prawn library already does so, extracting
-# the information from the low-level PDF tree it provices
+# the information from the low-level PDF tree it provides
 # access to is cumbersome and, to be honest, I did not feel
 # like digging in the PDF specification until I figure out
 # how this is stored in the PDF tree. Therefore I took another,
@@ -67,8 +108,8 @@ require_relative "to_prawn"
 # defined and any call to ::resolve_pdf_reference will
 # return +nil+ instead of any useful page number. This
 # is the reason why all the methods dealing with the
-# PDF destinations are class methods rather than instance
-# methods of this class: When generating the PDF documentation
+# PDF destinations are module methods rather than instance
+# methods of this module: When generating the PDF documentation
 # for the first time, destinations are added to the
 # ::resolvable_pdf_references hash as already explained. If
 # then a cross-reference is encountered that cannot be
@@ -121,11 +162,10 @@ require_relative "to_prawn"
 # ¹ Note that while it is always up to date, during a
 # generation run it is by no means complete. It is filled
 # "live" when destinations are added to the PDF document.
-class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
+module RDoc::Markup::PrawnCrossReferencing
 
-  # RDoc::Context this formatter resolves it’s references
-  # relative to.
-  attr_accessor :context
+  # Colour used for internal links. HTML colour code.
+  INTERNAL_LINK_COLOR = "0000FF"
 
   # A hash that maps all already known destinations
   # to the line number where they appear. Keys are strings.
@@ -193,50 +233,20 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     end
   end
 
-  # Creates a new ToPrawn_Crossref formatter.
+  # Does some extra initialisation necessary for the
+  # cross-reference resolver. Namely it adds the
+  # RDoc specials for recognising possible cross-references
+  # in the markup. Be sure to call +super+ in the including
+  # class!
   #
-  # == Parameters
-  # [context]
-  #   The RDoc::Context relative to which this formatter
-  #   will resolve cross-references.
-  # [pdf]
-  #   The Prawn::Document to output to. Note that
-  #   this method doesn’t do any initialisation on
-  #   that object, so you have to add the font families
-  #   required by this formatter (see constants), set the
-  #   default font size, etc. before you pass the object
-  #   to this method.
-  # [heading_level (0)]
-  #   The relative heading level. This value is added to
-  #   the heading level the user requests to prevent
-  #   huge headings in contexts like method documentation.
-  # [inputencoding ("UTF-8")]
-  #   Not used currently.
-  # [show_hash (false)]
-  #   Show the hash signs # in front of instance methods when
-  #   linking to them if true.
-  # [show_pages (false)]
-  #   If true, add a short page indicator after each cross-reference
-  #   link. This allows you to print the documentation without
-  #   loosing cross-referencing facilities (remember: Hypertext
-  #   links don’t work on real paper! ;-))
-  # [hyperlink_all (false)]
-  #   Link everything that cannot hide fast enough. This
-  #   will try to link to methods without the leading hash
-  #   sign (creating a huge number of false positives) and
-  #   tries to find cross-referencing names everywhere.
-  # [markup (nil)]
-  #   Passed on to the superclass.
-  def initialize(context, pdf, heading_level = 0, inputencoding = "UTF-8", show_hash = false, show_pages = true, hyperlink_all = false, markup = nil)
-    super(pdf, heading_level, inputencoding, markup)
+  # This method also calls +super+ itself and passes on all
+  # arguments it receives. Ensure that when you call +super+,
+  # methods like #context already return a meaningful value.
+  def initialize(*)
+    super
+    @crossref_resolver = RDoc::CrossReference.new(context)
 
-    @context           = context
-    @show_hash         = show_hash
-    @show_pages        = show_pages
-    @hyperlink_all     = hyperlink_all
-    @crossref_resolver = RDoc::CrossReference.new(@context)
-
-    if @hyperlink_all
+    if hyperlink_all?
       @markup.add_special(RDoc::CrossReference::ALL_CROSSREF_REGEXP, :CROSSREF)
     else
       @markup.add_special(RDoc::CrossReference::CROSSREF_REGEXP, :CROSSREF)
@@ -245,43 +255,12 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     @markup.add_special(/rdoc-ref:\S\w/, :RDOCLINK)
   end
 
-  # call-seq:
-  #   show_hash?()   ==> bool
-  #   show_hashes?() ==> bool
-  # 
-  # Whether or not the hash signs # are shown in front of
-  # methods.
-  #
-  # ==Return value
-  # Either true or false.
-  #
-  # ==Example
-  #   f.show_hashes? #=> true
-  def show_hash?
-    @show_hash
-  end
-  alias show_hashes? show_hash?
-
-  # Whether or not this formatter tries to resolve
-  # even words that may not be references (such as "new"),
-  # i.e. those with no method prefix <tt>#</tt> or 
-  # <tt>::</tt> in front and all in lowercase.
-  #
-  # ==Return value
-  # Either true or false.
-  #
-  # ==Example
-  #   f.hyperlink_all? #=> false
-  def hyperlink_all?
-    @hyperlink_all
-  end
-
   # Handles encountered cross references.
   def handle_special_CROSSREF(special)
     # If we aren’t instructed to try resolving all possibilities,
     # we won’t resolve all-lowercase words (which may be false
     # positives not meant to be a reference).
-    if !@hyperlink_all and special.text =~ /^[a-z]+$/
+    if !hyperlink_all? and special.text =~ /^[a-z]+$/
       return special.text
     end
 
@@ -321,7 +300,7 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     # Strip the hash sign # if we’re instructed to
     # do so.
     unless display_name
-      if name.start_with?("#") && !@show_hash
+      if name.start_with?("#") && !show_hash?
         display_name = name[1..-1]
       else
         display_name = name
@@ -335,16 +314,16 @@ class RDoc::Markup::ToPrawn_Crossref < RDoc::Markup::ToPrawn
     if resolved.kind_of?(String)
       resolved
     else # Some RDoc::CodeObject subclass instance
-      if dest_page = self.class.resolve_pdf_reference!(resolved.anchor) # Single = intended
+      if dest_page = RDoc::Markup::PrawnCrossReferencing.resolve_pdf_reference!(resolved.anchor) # Single = intended
         # Destination page is known
-        if @show_pages
+        if show_pages?
           "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color> [p. <color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{dest_page}</link></color>]"
         else
           "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color>"
         end
       else # Destination page is not known
         debug("Unresolved PDF reference to #{resolved.anchor}")
-        if @show_pages
+        if show_pages?
           display_name + " (p. ???)"
         else
           dispaly_name

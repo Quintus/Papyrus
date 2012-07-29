@@ -51,6 +51,13 @@ class RDoc::Generator::Papyrus
   # Number of PDF points to indent method descriptions.
   METHOD_INDENTATION = 40
 
+  # Maximum number of characters a constant’s value is
+  # allowed to have *before* the rest of the value is
+  # cut off and a "…" is appended (so that the resulting
+  # value character count is effectively this value
+  # plus 1 (… is a single character)).
+  CONSTANT_VALUE_CHAR_COUNT = 20
+
   class << self
 
     #Called by RDoc during option processing. Adds commandline
@@ -111,7 +118,8 @@ class RDoc::Generator::Papyrus
     #effectively eliminating the possibility to generate anything
     #other than LaTeX output due to the overwrites the
     #RDoc::Generator::LaTeX_Markup module does.
-    require_relative "../markup/to_prawn_crossref"
+    require_relative "../markup/to_prawn"
+    require_relative "../markup/to_prawn_table_cell"
     require_relative "prawn_markup"
     
     @options = options
@@ -164,7 +172,7 @@ class RDoc::Generator::Papyrus
         document_classmod(classmod)
       end
 
-      if RDoc::Markup::ToPrawn_Crossref.unresolved_pdf_references.empty?
+      if RDoc::Markup::PrawnCrossReferencing.unresolved_pdf_references.empty?
         # No unresolved references. No need for the second run.
         break
       else
@@ -180,14 +188,14 @@ class RDoc::Generator::Papyrus
           # Empty the array of undefined references to
           # avoid confusion of references being not resolvable
           # even after the second run.
-          RDoc::Markup::ToPrawn_Crossref.unresolved_pdf_references.clear
+          RDoc::Markup::PrawnCrossReferencing.unresolved_pdf_references.clear
         else
           # Uh-oh, undefined references in the second run are bad.
           puts "There were undefined page references."
           puts "This may be a bug in Papyrus. File a ticket"
           puts "on our bugtracker and provide your sources and"
           puts "this list of undefined references:"
-          puts RDoc::Markup::ToPrawn_Crossref.unresolved_pdf_references.join(", ")
+          puts RDoc::Markup::PrawnCrossReferencing.unresolved_pdf_references.join(", ")
         end
       end
 
@@ -225,7 +233,7 @@ class RDoc::Generator::Papyrus
     # this class/module to the list of known PDF
     # references.
     @pdf.start_new_page
-    RDoc::Markup::ToPrawn_Crossref.add_pdf_reference(@pdf, classmod.anchor, @pdf.page_count)
+    RDoc::Markup::PrawnCrossReferencing.add_pdf_reference(@pdf, classmod.anchor, @pdf.page_count)
 
     # "Class" or "Module" specifier above the heading
     @pdf.font_size(RDoc::Markup::ToPrawn::HEADING_SIZES[4])
@@ -241,6 +249,31 @@ class RDoc::Generator::Papyrus
 
     # Overview
     classmod.describe_in_pdf(@pdf)
+
+    # Constants
+    unless classmod.constants.empty?
+      pdf_heading(2, "Constants")
+      table = [["Name", "Value", "Description"]] # Header
+
+      # Add all constant’s docs to the table array
+      classmod.each_constant do |const|
+        document_constant(const, table)
+      end
+
+      # Actually draw the table
+      @pdf.table(table, header: true) do |table|
+        table.columns(0..2).width = @pdf.bounds.width / 3.0
+        table.columns(0..1).style(font: RDoc::Markup::ToPrawn::MONO_FONT_NAME,
+                                  size: RDoc::Markup::ToPrawn::MONO_FONT_SIZE)
+        table.row(0).style(font: RDoc::Markup::ToPrawn::SANS_FONT_NAME,
+                           font_style: :bold,
+                           size: RDoc::Markup::ToPrawn::BASE_FONT_SIZE + 1,
+                           align: :center,
+                           background_color: "DDDDDD")
+      end
+
+      @pdf.text("\n") # Some space
+    end
 
     # Methods
     meths = classmod.methods_by_type
@@ -267,7 +300,7 @@ class RDoc::Generator::Papyrus
       @pdf.move_down(3) # Prevent method name and call sequence from touching the upper line
 
       # Register the PDF destination for this method
-      RDoc::Markup::ToPrawn_Crossref.add_pdf_reference(@pdf, method.anchor, @pdf.page_count)
+      RDoc::Markup::PrawnCrossReferencing.add_pdf_reference(@pdf, method.anchor, @pdf.page_count)
 
       # Method name (1/2 of the available width)
       @pdf.text_box(method.name,
@@ -304,6 +337,32 @@ class RDoc::Generator::Papyrus
 
     # Some space so that it looks better
     @pdf.text("\n")
+  end
+
+  def document_constant(constant, table)
+    # Constants are documented using tables, which do not support
+    # all the fancy things the full-blown Prawn PDF formatter supports.
+    # So, for constants, we need to use this more restrictive formatter.
+    formatter = RDoc::Markup::ToPrawnTableCell.new(constant.parent,
+                                                   @options.show_hash,
+                                                   @options.show_pages,
+                                                   @options.hyperlink_all)
+
+    # Activate the RDoc formatter visitor on the constant’s comment
+    prawn_markup = constant.comment.parse.accept(formatter)
+
+    # Create the table cell
+    desc_cell = Prawn::Table::Cell.make(@pdf, prawn_markup, inline_format: true)
+
+    # Shorten the constant’s value if necessary
+    if constant.value.chars.count <= CONSTANT_VALUE_CHAR_COUNT
+      const_val = constant.value
+    else
+      const_val = "#{constant.value[0..CONSTANT_VALUE_CHAR_COUNT]}…"
+    end
+
+    # And finally, add the new row to the table.
+    table << [constant.name, const_val, desc_cell]
   end
 
   # Creates a heading of +level+ by changing font family and size,
