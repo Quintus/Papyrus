@@ -317,7 +317,7 @@ module RDoc::Markup::PrawnCrossReferencing
       if dest_page = RDoc::Markup::PrawnCrossReferencing.resolve_pdf_reference!(resolved.anchor) # Single = intended
         # Destination page is known
         if show_pages?
-          "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color> [p. <color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{dest_page}</link></color>]"
+          "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color> [p.#{Prawn::Text::NBSP}<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{dest_page}</link></color>]"
         else
           "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color>"
         end
