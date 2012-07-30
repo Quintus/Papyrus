@@ -286,6 +286,16 @@ class RDoc::Generator::Papyrus
       @pdf.text("\n") # Some space
     end
 
+    # Attributes
+    unless classmod.attributes.empty?
+      pdf_heading(2, "Attributes")
+      classmod.attributes.sort_by(&:name).each do |attr|
+        document_attribute(attr)
+      end
+
+      @pdf.text("\n") # Looks better
+    end
+
     # Methods
     meths = classmod.methods_by_type
 
@@ -385,6 +395,7 @@ class RDoc::Generator::Papyrus
     table << [constant.name, const_val, desc_cell]
   end
 
+  # Outputs the documentation for +inc+ onto the PDF.
   def document_include(inc)
     # We need the cross-referencing facility here
     formatter = RDoc::Markup::ToPrawnTableCell.new(inc.parent,
@@ -395,6 +406,14 @@ class RDoc::Generator::Papyrus
 
     # Resolve the reference to the full module name.
     @pdf.text(formatter.make_crossref(inc.full_name), inline_format: true)
+  end
+
+  # Outputs the documentation for +attr+ onto the PDF.
+  def document_attribute(attr)
+    @pdf.text("<font name=\"#{RDoc::Markup::ToPrawn::SANS_FONT_NAME}\">#{attr.name}#{Prawn::Text::NBSP}<sup>[#{attr.rw}]</sup></font>", inline_format: true)
+    @pdf.indent(METHOD_INDENTATION) do
+      attr.describe_in_pdf(@pdf)
+    end
   end
 
   # Creates a heading of +level+ by changing font family and size,
