@@ -58,6 +58,10 @@ class RDoc::Generator::Papyrus
   # plus 1 (… is a single character)).
   CONSTANT_VALUE_CHAR_COUNT = 20
 
+  # Maximum page number the column width of the method
+  # overview table is calculated for.
+  METHOD_OVERVIEW_MAX_PAGENUM = 9999
+
   class << self
 
     #Called by RDoc during option processing. Adds commandline
@@ -146,8 +150,8 @@ class RDoc::Generator::Papyrus
     debug("Sorting classes and modules")
     @classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
     @modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
-    @classes_and_modules = @classes.concat(@modules).sort_by{|mod| mod.full_name}
-    # @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort
+    @classes_and_modules = @classes.concat(@modules).sort_by(&:full_name)
+    @methods = @classes_and_modules.map{|mod| mod.method_list.sort{|m1, m2| tm1, tm2 = [m1, m2].map{|m|m.pretty_name.tr(":#", "ab")}; tm1 <=> tm2}}.flatten
 
     @pdf = nil
     2.times do |i| # Two times for resolving all references
@@ -167,6 +171,31 @@ class RDoc::Generator::Papyrus
         file.describe_in_pdf(@pdf)
         @pdf.start_new_page
       end
+
+      debug "Creating method overview"
+      table = [["Method name", "p."]]
+      formatter = table_formatter(nil) # We don’t use the resolver
+      @methods.each{|m| table << [m.full_name, Prawn::Table::Cell.make(@pdf, formatter.prawn_page_link(m.anchor, formatter.determine_page!(m)), inline_format: true)]}
+      @pdf.table(table, header: true) do |tbl|
+        # Column width (to_s as we want to measure that width of the printed number)
+        tbl.column(0).width = @pdf.bounds.width - @pdf.width_of(METHOD_OVERVIEW_MAX_PAGENUM.to_s)
+        tbl.column(1).width = @pdf.width_of(METHOD_OVERVIEW_MAX_PAGENUM.to_s)
+
+        # Border only for the first row
+        tbl.row(0).borders = [:bottom]
+        tbl.rows(1..Float::INFINITY).borders = []
+
+        # Special cell styles
+        tbl.column(0).style(font: RDoc::Markup::ToPrawn::MONO_FONT_NAME,
+                            size: RDoc::Markup::ToPrawn::MONO_FONT_SIZE)
+        tbl.row(0).style(font: RDoc::Markup::ToPrawn::SANS_FONT_NAME,
+                         font_style: :bold,
+                         size: RDoc::Markup::ToPrawn::BASE_FONT_SIZE + 1,
+                         background_color: "DDDDDD")
+        tbl.row(0).column(0).style(align: :left)
+        tbl.row(0).column(1).style(align: :right)
+      end
+      @pdf.start_new_page
 
       debug "Evaluating classes and modules"
       @classes_and_modules.each do |classmod|
@@ -355,11 +384,11 @@ class RDoc::Generator::Papyrus
     # Actual method description
     @pdf.indent(METHOD_INDENTATION) do
       if target = method.is_alias_for # Single = intended
-        @pdf.text("<i>Alias for #{table_formatter(method.parent).make_crossref(target.pretty_name)}</i>", inline_format: true)
+        @pdf.text("<i>Alias for #{table_formatter(method.parent).prawn_anchor_link(m.anchor, m.pretty_name)}</i>", inline_format: true)
       else
         method.describe_in_pdf(@pdf)
         unless method.aliases.empty?
-          aliases = method.aliases.sort_by(&:name).map{|al| table_formatter(method.parent).make_crossref(al.pretty_name)}
+          aliases = method.aliases.sort_by(&:name).map{|al| table_formatter(method.parent).prawn_anchor_link(al.anchor, al.pretty_name)}
           @pdf.text("\n")
           @pdf.text("<i>Also aliased as: #{aliases.join(', ')}</i>", inline_format: true)
         end

@@ -312,12 +312,12 @@ module RDoc::Markup::PrawnCrossReferencing
     if resolved.kind_of?(String)
       resolved
     else # Some RDoc::CodeObject subclass instance
-      if dest_page = RDoc::Markup::PrawnCrossReferencing.resolve_pdf_reference!(resolved.anchor) # Single = intended
+      if dest_page = determine_page!(resolved) # Single = intended
         # Destination page is known
         if show_pages?
-          "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color> [p.#{Prawn::Text::NBSP}<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{dest_page}</link></color>]"
+          "#{prawn_anchor_link(resolved.anchor, display_name)} [p.#{Prawn::Text::NBSP}#{prawn_page_link(resolved.anchor, dest_page)}]"
         else
-          "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{resolved.anchor}\">#{display_name}</link></color>"
+          prawn_anchor_link(resolved.anchor, display_name)
         end
       else # Destination page is not known
         debug("Unresolved PDF reference to #{resolved.anchor}")
@@ -328,6 +328,31 @@ module RDoc::Markup::PrawnCrossReferencing
         end
       end
     end
+  end
+
+  # Shortcut for calling ::resolve_pdf_reference! with
+  # <tt>codeobj.anchor</tt> as the argument. Returns the
+  # (unlinked and unmarked-up) page number as an integer
+  # or +nil+ if no page number could be found (yet).
+  def determine_page!(codeobj)
+    result = RDoc::Markup::PrawnCrossReferencing.resolve_pdf_reference!(codeobj.anchor)
+    result && result.to_i
+  end
+
+  # Takes a valid +anchor+ and a +display+ text and returns
+  # the Prawn markup for an internal link with these
+  # arguments. Note that no anchor validation is done here;
+  # if not careful, you can insert invalid links with this.
+  def prawn_anchor_link(anchor, text)
+    "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{anchor}\">#{text}</link></color>"
+  end
+
+  # Takes a valid +anchor+ and a +page+ number to display
+  # and returns the Prawn markup for a page link to the
+  # anchor. Note that no anchor validation is done here;
+  # if not careful, you can insert invalid links with this.
+  def prawn_page_link(anchor, page)
+    "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{anchor}\">#{page}</link></color>"
   end
 
   private
