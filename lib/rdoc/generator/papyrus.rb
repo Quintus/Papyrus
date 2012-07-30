@@ -151,7 +151,7 @@ class RDoc::Generator::Papyrus
     @classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
     @modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
     @classes_and_modules = @classes.concat(@modules).sort_by(&:full_name)
-    @methods = @classes_and_modules.map{|mod| mod.method_list.sort{|m1, m2| tm1, tm2 = [m1, m2].map{|m|m.pretty_name.tr(":#", "ab")}; tm1 <=> tm2}}.flatten
+    @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort{|m1, m2| m1.full_name.tr(":#", "ab") <=> m2.full_name.tr(":#", "ab")}
 
     @pdf = nil
     2.times do |i| # Two times for resolving all references
@@ -190,8 +190,7 @@ class RDoc::Generator::Papyrus
                             size: RDoc::Markup::ToPrawn::MONO_FONT_SIZE)
         tbl.row(0).style(font: RDoc::Markup::ToPrawn::SANS_FONT_NAME,
                          font_style: :bold,
-                         size: RDoc::Markup::ToPrawn::BASE_FONT_SIZE + 1,
-                         background_color: "DDDDDD")
+                         size: RDoc::Markup::ToPrawn::BASE_FONT_SIZE + 1)
         tbl.row(0).column(0).style(align: :left)
         tbl.row(0).column(1).style(align: :right)
       end
