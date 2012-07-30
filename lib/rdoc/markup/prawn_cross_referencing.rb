@@ -272,8 +272,6 @@ module RDoc::Markup::PrawnCrossReferencing
     make_crossref(special.match(/^rdoc-ref:/).post_match)
   end
 
-  private
-
   # Tries to resolve the given reference name.
   #
   # == Parameters
@@ -331,6 +329,8 @@ module RDoc::Markup::PrawnCrossReferencing
       end
     end
   end
+
+  private
 
   #If RDoc is invoked in debug mode, writes out +str+ using
   #+puts+ (prepending "[papyrus] ") and calls it’s block

@@ -250,6 +250,17 @@ class RDoc::Generator::Papyrus
     # Overview
     classmod.describe_in_pdf(@pdf)
 
+    # Mixins
+    unless classmod.includes.empty?
+      pdf_heading(2, "Includes")
+
+      classmod.each_include do |inc|
+        document_include(inc)
+      end
+
+      @pdf.text("\n") # Looks better
+    end
+
     # Constants
     unless classmod.constants.empty?
       pdf_heading(2, "Constants")
@@ -345,6 +356,7 @@ class RDoc::Generator::Papyrus
     # all the fancy things the full-blown Prawn PDF formatter supports.
     # So, for constants, we need to use this more restrictive formatter.
     formatter = RDoc::Markup::ToPrawnTableCell.new(constant.parent,
+                                                   3,
                                                    @options.show_hash,
                                                    @options.show_pages,
                                                    @options.hyperlink_all)
@@ -371,6 +383,18 @@ class RDoc::Generator::Papyrus
 
     # And finally, add the new row to the table.
     table << [constant.name, const_val, desc_cell]
+  end
+
+  def document_include(inc)
+    # We need the cross-referencing facility here
+    formatter = RDoc::Markup::ToPrawnTableCell.new(inc.parent,
+                                                   0, # Ignored
+                                                   @options.show_hash,
+                                                   @options.show_pages,
+                                                   @options.hyperlink_all)
+
+    # Resolve the reference to the full module name.
+    @pdf.text(formatter.make_crossref(inc.full_name), inline_format: true)
   end
 
   # Creates a heading of +level+ by changing font family and size,
