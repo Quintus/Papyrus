@@ -165,6 +165,7 @@ class RDoc::Generator::Papyrus
       debug "Evaluating toplevel files"
       @rdoc_files.each do |file|
         file.describe_in_pdf(@pdf)
+        @pdf.start_new_page
       end
 
       debug "Evaluating classes and modules"
@@ -228,11 +229,7 @@ class RDoc::Generator::Papyrus
   # Outputs the documentation for the class or module +classmod+
   # and all its methods.
   def document_classmod(classmod)
-    # Start a new class/module documentation always
-    # on a new page and add the PDF destination for
-    # this class/module to the list of known PDF
-    # references.
-    @pdf.start_new_page
+    # Register the PDF destination for this class/module
     RDoc::Markup::PrawnCrossReferencing.add_pdf_reference(@pdf, classmod.anchor, @pdf.page_count)
 
     # "Class" or "Module" specifier above the heading
@@ -307,6 +304,10 @@ class RDoc::Generator::Papyrus
         end
       end
     end
+
+    # Start a new class/module documentation always
+    # on a new page.
+    @pdf.start_new_page
   end
 
   # Outputs the documentation for +method+ onto the PDF.
