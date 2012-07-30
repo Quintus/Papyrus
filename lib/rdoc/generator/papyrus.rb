@@ -122,7 +122,7 @@ class RDoc::Generator::Papyrus
     require_relative "../markup/to_prawn_table_cell"
     require_relative "prawn_markup"
     
-    @options = options
+    @options    = options
     @output_dir = Pathname.pwd.expand_path + @options.op_dir
   end
 
@@ -354,7 +354,16 @@ class RDoc::Generator::Papyrus
 
     # Actual method description
     @pdf.indent(METHOD_INDENTATION) do
-      method.describe_in_pdf(@pdf)
+      if target = method.is_alias_for # Single = intended
+        @pdf.text("<i>Alias for #{table_formatter(method.parent).make_crossref(target.pretty_name)}</i>", inline_format: true)
+      else
+        method.describe_in_pdf(@pdf)
+        unless method.aliases.empty?
+          aliases = method.aliases.sort_by(&:name).map{|al| table_formatter(method.parent).make_crossref(al.pretty_name)}
+          @pdf.text("\n")
+          @pdf.text("<i>Also aliased as: #{aliases.join(', ')}</i>", inline_format: true)
+        end
+      end
     end
 
     # Some space so that it looks better
@@ -363,15 +372,6 @@ class RDoc::Generator::Papyrus
 
   # Adds a table row for +constant+ to +table+.
   def document_constant(constant, table)
-    # Constants are documented using tables, which do not support
-    # all the fancy things the full-blown Prawn PDF formatter supports.
-    # So, for constants, we need to use this more restrictive formatter.
-    formatter = RDoc::Markup::ToPrawnTableCell.new(constant.parent,
-                                                   3,
-                                                   @options.show_hash,
-                                                   @options.show_pages,
-                                                   @options.hyperlink_all)
-
     # Register the PDF destination for this constant
     # FIXME: Always places the destination at the classmod’s first page!
     #        If the constant list is longer than one page, this is
@@ -379,8 +379,8 @@ class RDoc::Generator::Papyrus
     #        and hooking into Prawn’s table layout mechanism.
     RDoc::Markup::PrawnCrossReferencing.add_pdf_reference(@pdf, constant.anchor, @pdf.page_count)
 
-    # Activate the RDoc formatter visitor on the constant’s comment
-    prawn_markup = constant.comment.parse.accept(formatter)
+    # Invoke the Prawn table formatter visitor on the constant’s comment
+    prawn_markup = constant.comment.parse.accept(table_formatter(constant.parent, 3))
 
     # Create the table cell
     desc_cell = Prawn::Table::Cell.make(@pdf, prawn_markup, inline_format: true)
@@ -398,15 +398,8 @@ class RDoc::Generator::Papyrus
 
   # Outputs the documentation for +inc+ onto the PDF.
   def document_include(inc)
-    # We need the cross-referencing facility here
-    formatter = RDoc::Markup::ToPrawnTableCell.new(inc.parent,
-                                                   0, # Ignored
-                                                   @options.show_hash,
-                                                   @options.show_pages,
-                                                   @options.hyperlink_all)
-
     # Resolve the reference to the full module name.
-    @pdf.text(formatter.make_crossref(inc.full_name), inline_format: true)
+    @pdf.text(table_formatter(inc.parent).make_crossref(inc.full_name), inline_format: true)
   end
 
   # Outputs the documentation for +attr+ onto the PDF.
@@ -433,6 +426,21 @@ class RDoc::Generator::Papyrus
 
     # Some space after the heading for better look
     @pdf.text("\n")
+  end
+
+  # At some places we use Prawn tables, which only support
+  # a small subset of what the full-blown flow text formatter
+  # supports. For these cases, we need an extra formatter,
+  # which is returned by this method. +context+ is an
+  # RDoc::Context to resolve references relative to,
+  # +heading_level+ is used for relatively calculating
+  # heading sizes.
+  def table_formatter(context, heading_level = 0)
+    RDoc::Markup::ToPrawnTableCell.new(context,
+                                       heading_level,
+                                       @options.show_hash,
+                                       @options.show_pages,
+                                       @options.hyperlink_all)
   end
 
   #Generates a \hyperref with the given arguments. +show_page+ may be
