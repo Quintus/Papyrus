@@ -22,12 +22,14 @@ gem "rdoc"
 require "pathname"
 require "rdoc/markup/formatter"
 require "rdoc/markup/inline"
+require_relative "prawn_external_linking"
 require_relative "prawn_cross_referencing"
 
 # RDoc formatter than turns RDoc markup into a PDF file
 # by using the Prawn PDF library.
 class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   include RDoc::Text
+  include RDoc::Markup::PrawnExternalLinking
   include RDoc::Markup::PrawnCrossReferencing
 
   # Struct for saving information about used padding.
@@ -97,12 +99,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   #Number of PDF points to indent when a list ist encountered.
   LIST_PADDING = 20
 
-  # Colour used for external links. HTML colour code.
-  # See PrawnCrossReferencing::INTERNAL_LINK_COLOR for
-  # the colour used for internal links.
-  EXTERNAL_LINK_COLOR = "FF0000"
-
-  # The PDF file this formatting wil output to,
+  # The PDF file this formatter will output to,
   # a Prawn::Document object.
   attr_accessor :pdf
 
@@ -160,10 +157,6 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @list_numbers      = [] # Keeps track of the labels of number lists
     @paddings          = [] # Keeps track of the indentation
     @note_positions    = [] # Keeps track of page and position in note lists
-
-    # Copied from RDoc 3.12, adds link capabilities
-    @markup.add_special(/((link:|https?:|mailto:|ftp:|irc:|www\.)\S+\w)/, :HYPERLINK)
-    @markup.add_special(/(((\{.*?\})|\b\S+?)\[\S+?\])/, :TIDYLINK)
 
     # Inline formatting directives as known by Prawn’s
     # inline formatter
@@ -395,19 +388,6 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     @pdf.text(raw)
   end
 
-  # Handles the HYPERLINK special and turns it into a clickable URL.
-  def handle_special_HYPERLINK(special)
-    make_url(special.text)
-  end
-
-  # Method copied from RDoc project and slightly modified.
-  #
-  # Handles hyperlinks of form {text}[url] and text[url].
-  def handle_special_TIDYLINK(special)
-    return special.text unless special.text =~ /\{(.*?)\}\[(.*?)\]/ or special.text =~ /(\S+)\[(.*?)\]/
-    make_url($2, $1)
-  end
-
   # Tokenises the inline markup in +item+ and calls the apropriate handlers
   # on the calling instance.
   def to_prawn(item)
@@ -429,29 +409,6 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
     pad_info = @paddings.pop
     @pdf.bounds.subtract_right_padding(pad_info.right_padding) if pad_info.right_padding
     @pdf.bounds.subtract_left_padding(pad_info.left_padding)
-  end
-
-  # Creates a clickable URL. If +text+ is given, uses that as the
-  # label. Otherwise, just uses the link text as label and displays
-  # it in a monospaced font.
-  def make_url(url, text = nil)
-    url = "http://#{url}" unless url =~ /^.*?:/
-    if text
-      "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><link href=\"#{url}\">#{text}</link></color>"
-    else
-      "<color rgb=\"#{EXTERNAL_LINK_COLOR}\"><font name=\"#{MONO_FONT_NAME}\" size=\"#{MONO_FONT_SIZE - 1}\"><link href=\"#{url}\">#{url}</link></font></color>"
-    end
-  end
-
-  #If RDoc is invoked in debug mode, writes out +str+ using
-  #+puts+ (prepending "[papyrus] ") and calls it’s block
-  #if one was given. If RDoc isn’t invoked in debug mode,
-  #does nothing.
-  def debug(str = nil)
-    if $DEBUG_RDOC
-      puts "[papyrus] #{str}" if str
-      yield if block_given?
-    end
   end
 
 end

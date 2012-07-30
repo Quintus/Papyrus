@@ -31,6 +31,7 @@ require_relative "to_prawn"
 # ignored.
 class RDoc::Markup::ToPrawnTableCell < RDoc::Markup::Formatter
   include RDoc::Text
+  include RDoc::Markup::PrawnExternalLinking
   include RDoc::Markup::PrawnCrossReferencing
 
   # Creates a new instance of this formatter. The parameters

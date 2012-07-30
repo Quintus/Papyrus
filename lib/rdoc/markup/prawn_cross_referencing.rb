@@ -326,9 +326,20 @@ module RDoc::Markup::PrawnCrossReferencing
         if show_pages?
           display_name + " (p. ???)"
         else
-          dispaly_name
+          display_name
         end
       end
+    end
+  end
+
+  #If RDoc is invoked in debug mode, writes out +str+ using
+  #+puts+ (prepending "[papyrus] ") and calls it’s block
+  #if one was given. If RDoc isn’t invoked in debug mode,
+  #does nothing.
+  def debug(str = nil)
+    if $DEBUG_RDOC
+      puts "[papyrus] #{str}" if str
+      yield if block_given?
     end
   end
 

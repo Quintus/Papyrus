@@ -339,6 +339,7 @@ class RDoc::Generator::Papyrus
     @pdf.text("\n")
   end
 
+  # Adds a table row for +constant+ to +table+.
   def document_constant(constant, table)
     # Constants are documented using tables, which do not support
     # all the fancy things the full-blown Prawn PDF formatter supports.
@@ -347,6 +348,13 @@ class RDoc::Generator::Papyrus
                                                    @options.show_hash,
                                                    @options.show_pages,
                                                    @options.hyperlink_all)
+
+    # Register the PDF destination for this constant
+    # FIXME: Always places the destination at the classmod’s first page!
+    #        If the constant list is longer than one page, this is
+    #        confusing. Could probably be solved by subclassing Table::Cell
+    #        and hooking into Prawn’s table layout mechanism.
+    RDoc::Markup::PrawnCrossReferencing.add_pdf_reference(@pdf, constant.anchor, @pdf.page_count)
 
     # Activate the RDoc formatter visitor on the constant’s comment
     prawn_markup = constant.comment.parse.accept(formatter)
