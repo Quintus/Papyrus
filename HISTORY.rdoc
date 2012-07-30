@@ -7,6 +7,10 @@ two releases. For a comprehensive list, see the
 Bug fixes are written in <i>italic</i>, important changes in
 <b>bold</b>.
 
+== 0.1.0
+
+* Completely rewrote backend to use Prawn instead of LaTeX.
+
 == 0.0.3
 
 * License changed from GPLv2 to GPLv3
