@@ -151,7 +151,8 @@ class RDoc::Generator::Papyrus
     @classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
     @modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
     @classes_and_modules = @classes.concat(@modules).sort_by(&:full_name)
-    @methods = @classes_and_modules.map{|mod| mod.method_list}.flatten.sort{|m1, m2| m1.full_name.tr(":#", "ab") <=> m2.full_name.tr(":#", "ab")}
+    @methods = @classes_and_modules.sort_by(&:full_name).map{|mod| mod.enum_for(:each_method).sort_by{|m|m.pretty_name.tr(":#", "ab")}}.flatten
+    # Thanks to Hanmac for the above sorting code
 
     @pdf = nil
     2.times do |i| # Two times for resolving all references
