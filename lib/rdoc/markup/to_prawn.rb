@@ -252,10 +252,8 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
   def accept_list_item_start(item)
     case @lists_in_progress.last
     when :BULLET then
-      bullet_radius = @pdf.font.ascender / 5
-      @pdf.fill do
-        @pdf.circle([-bullet_radius - 5, @pdf.cursor - @pdf.font.ascender / 2], bullet_radius) # -5 ensures the bullet doesn’t touch the text
-      end
+      # • is the Unicode bullet U+2022
+      @pdf.draw_text("•", at: [-@pdf.width_of("•") - 5, @pdf.cursor - @pdf.font.ascender]) # -5 ensures the bullet doesn’t touch the text
     when :NUMBER then
       # Increment the last number of the number label
       @list_numbers[-1] += 1
