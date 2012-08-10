@@ -84,6 +84,7 @@ module RDoc::Generator::PrawnMarkup
     when RDoc::TopLevel    then "toplevel-#{relative_name}"
     when RDoc::Alias       then "alias-#{parent.full_name}-#{new_name}"
     when RDoc::AnyMethod   then "method-#{parent.full_name}-#{pretty_name}"
+    when RDoc::Attr        then "attr-#{parent.full_name}-#{pretty_name}"
     else
       raise("Cannot create anchors to objects of class #{self.class}!")
     end

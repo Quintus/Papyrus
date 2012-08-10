@@ -384,7 +384,7 @@ class RDoc::Generator::Papyrus
     # Actual method description
     @pdf.indent(METHOD_INDENTATION) do
       if target = method.is_alias_for # Single = intended
-        @pdf.text("<i>Alias for #{table_formatter(method.parent).prawn_anchor_link(m.anchor, m.pretty_name)}</i>", inline_format: true)
+        @pdf.text("<i>Alias for #{table_formatter(method.parent).prawn_anchor_link(method.anchor, method.pretty_name)}</i>", inline_format: true)
       else
         method.describe_in_pdf(@pdf)
         unless method.aliases.empty?
@@ -433,6 +433,9 @@ class RDoc::Generator::Papyrus
 
   # Outputs the documentation for +attr+ onto the PDF.
   def document_attribute(attr)
+    # Register the PDF destination for this attribute
+    RDoc::Markup::PrawnCrossReferencing.add_pdf_reference(@pdf, attr.anchor, @pdf.page_count)
+
     @pdf.text("<font name=\"#{RDoc::Markup::ToPrawn::SANS_FONT_NAME}\">#{attr.name}#{Prawn::Text::NBSP}<sup>[#{attr.rw}]</sup></font>", inline_format: true)
     @pdf.indent(METHOD_INDENTATION) do
       attr.describe_in_pdf(@pdf)
