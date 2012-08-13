@@ -66,4 +66,15 @@ module RDoc::Generator::Papyrus::Options
     @append_source = val
   end
 
+  # The paper size to use for the PDF. Defaults to "A4".
+  # Can be set to anything Prawn::Document.new understands.
+  def paper_size
+    @paper_size ||= "A4"
+  end
+
+  # Setter fir the #paper_size value.
+  def paper_size=(val)
+    @paper_size = val
+  end
+
 end

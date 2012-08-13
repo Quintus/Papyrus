@@ -23,6 +23,7 @@ require "pathname"
 require "open3"
 gem "rdoc"
 require "prawn"
+require "prawn/measurement_extensions"
 require "rdoc/rdoc"
 require "rdoc/generator"
 
@@ -62,6 +63,13 @@ class RDoc::Generator::Papyrus
   # overview table is calculated for.
   METHOD_OVERVIEW_MAX_PAGENUM = 9999
 
+  # Margin for the top, left, and right edges.
+  TOPLEFTRIGHT_MARGIN = 2.cm
+
+  # Margin for the bottom edge (should be big enough
+  # to hold the footer).
+  BOTTOM_MARGIN = 2 * TOPLEFTRIGHT_MARGIN
+
   class << self
 
     #Called by RDoc during option processing. Adds commandline
@@ -87,7 +95,11 @@ class RDoc::Generator::Papyrus
         debug("Found --inputencoding: #{val}")
         options.inputencoding = val
       end
-    
+
+      options.option_parser.on("--paper-size SIZE",
+                               "Set the paper size. Anything Prawn::Document.new",
+                               "can understand. Defaults to `A4'."){|val| optons.paper_size = val}
+
       options.option_parser.on("--[no-]append-source",
                                "If set, the sourcecode of all methods is included", 
                                "as an appendix (warning: HUGE PDF", 
@@ -157,7 +169,7 @@ class RDoc::Generator::Papyrus
     @pdf = nil
     2.times do |i| # Two times for resolving all references
       puts "Constructing PDF..."
-      @pdf = Prawn::Document.new
+      @pdf = Prawn::Document.new(page_size: @options.paper_size, margin: TOPLEFTRIGHT_MARGIN, bottom_margin: BOTTOM_MARGIN)
 
       # Register our font families
       @pdf.font_families.update(RDoc::Markup::ToPrawn::SERIF_FONT_NAME => RDoc::Markup::ToPrawn::SERIF_FONT_SPEC)
@@ -239,6 +251,9 @@ this list of undefined references:
       end
 
     end
+
+    debug "Numbering pages"
+    @pdf.number_pages("<page>", at: [@pdf.bounds.width - @pdf.width_of("99999"), -(0.5 * BOTTOM_MARGIN)], align: :right) # More than 99999 pages are quite unlikely
 
     debug "Rendering PDF"
     @pdf.render_file(@output_dir.join("Documentation.pdf").to_s)
