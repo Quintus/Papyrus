@@ -169,7 +169,13 @@ class RDoc::Generator::Papyrus
 
       debug "Evaluating toplevel files"
       @rdoc_files.each do |file|
+        # Register the PDF destination for this file
+        RDoc::Markup::PrawnCrossReferencing.add_pdf_reference(@pdf, file.anchor, @pdf.page_count)
+
+        # Actually format the file’s documentation
         file.describe_in_pdf(@pdf)
+
+        # Whatever comes next shall start on a new page
         @pdf.start_new_page
       end
 
@@ -221,10 +227,13 @@ class RDoc::Generator::Papyrus
           RDoc::Markup::PrawnCrossReferencing.unresolved_pdf_references.clear
         else
           # Uh-oh, undefined references in the second run are bad.
-          puts "There were undefined page references."
-          puts "This may be a bug in Papyrus. File a ticket"
-          puts "on our bugtracker and provide your sources and"
-          puts "this list of undefined references:"
+          puts <<-EOF
+There were undefined page references.
+If you are sure you have included all relevant files in the
+list of files passed to RDoc, this may be a bug in Papyrus.
+File a ticket on our bugtracker and provide your sources and
+this list of undefined references:
+          EOF
           puts RDoc::Markup::PrawnCrossReferencing.unresolved_pdf_references.join(", ")
         end
       end
