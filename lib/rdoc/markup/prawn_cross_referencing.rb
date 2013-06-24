@@ -233,6 +233,22 @@ module RDoc::Markup::PrawnCrossReferencing
     end
   end
 
+  # Takes a valid +anchor+ and a +display+ text and returns
+  # the Prawn markup for an internal link with these
+  # arguments. Note that no anchor validation is done here;
+  # if not careful, you can insert invalid links with this.
+  def self.prawn_anchor_link(anchor, text)
+    "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{anchor}\">#{text}</link></color>"
+  end
+
+  # Takes a valid +anchor+ and a +page+ number to display
+  # and returns the Prawn markup for a page link to the
+  # anchor. Note that no anchor validation is done here;
+  # if not careful, you can insert invalid links with this.
+  def self.prawn_page_link(anchor, page)
+    "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{anchor}\">#{page}</link></color>"
+  end
+
   # Does some extra initialisation necessary for the
   # cross-reference resolver. Namely it adds the
   # RDoc specials for recognising possible cross-references
@@ -339,20 +355,14 @@ module RDoc::Markup::PrawnCrossReferencing
     result && result.to_i
   end
 
-  # Takes a valid +anchor+ and a +display+ text and returns
-  # the Prawn markup for an internal link with these
-  # arguments. Note that no anchor validation is done here;
-  # if not careful, you can insert invalid links with this.
-  def prawn_anchor_link(anchor, text)
-    "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{anchor}\">#{text}</link></color>"
+  # Shortcut for calling the class method.
+  def prawn_page_link(*args)
+    RDoc::Markup::PrawnCrossReferencing.prawn_page_link(*args)
   end
 
-  # Takes a valid +anchor+ and a +page+ number to display
-  # and returns the Prawn markup for a page link to the
-  # anchor. Note that no anchor validation is done here;
-  # if not careful, you can insert invalid links with this.
-  def prawn_page_link(anchor, page)
-    "<color rgb=\"#{INTERNAL_LINK_COLOR}\"><link anchor=\"#{anchor}\">#{page}</link></color>"
+  # Shortcut for calling the class method.
+  def prawn_anchor_link(*args)
+    RDoc::Markup::PrawnCrossReferencing.prawn_anchor_link(*args)
   end
 
   private

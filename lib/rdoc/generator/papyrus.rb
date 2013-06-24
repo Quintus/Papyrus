@@ -98,7 +98,7 @@ class RDoc::Generator::Papyrus
 
       options.option_parser.on("--paper-size SIZE",
                                "Set the paper size. Anything Prawn::Document.new",
-                               "can understand. Defaults to `A4'."){|val| optons.paper_size = val}
+                               "can understand. Defaults to `A4'."){|val| options.paper_size = val}
 
       options.option_parser.on("--[no-]append-source",
                                "If set, the sourcecode of all methods is included", 
@@ -125,10 +125,11 @@ class RDoc::Generator::Papyrus
   #Creates a new instance of this class. Automatically called by RDoc.
   #There shouldn’t be any need for you to call this.
   #==Parameter
+  #[store] RDoc passes everything important here.
   #[options] RDoc passes the current RDoc::Options instance here.
   #==Return value
   #The newly created instance.
-  def initialize(options)
+  def initialize(store, options)
     #The requiring of the rest of the library *must* be placed here,
     #because otherwise it’s loaded during RDoc’s discovering process,
     #effectively eliminating the possibility to generate anything
@@ -137,18 +138,19 @@ class RDoc::Generator::Papyrus
     require_relative "../markup/to_prawn"
     require_relative "../markup/to_prawn_table_cell"
     require_relative "prawn_markup"
-    
+
+    @store      = store
     @options    = options
     @output_dir = Pathname.pwd.expand_path + @options.op_dir
   end
 
-  def generate(top_levels)
+  def generate
     #Prepare all the data needed by all the templates
     doc_title = @options.title
 
     #Get the rdoc file list and move the "main page file" to the beginning.
     debug("Examining toplevel files")
-    @rdoc_files = top_levels.select{|t| t.name =~ /\.rdoc$/i}
+    @rdoc_files = @store.all_files.select{|t| t.name =~ /\.rdoc$/i}
     debug("Found #{@rdoc_files.count} toplevels ending in .rdoc that will be processed")
     if @options.main_page #nil if not set, no main page
       main_index = @rdoc_files.index{|t| t.full_name == @options.main_page}
@@ -160,8 +162,8 @@ class RDoc::Generator::Papyrus
 
     #Get the class, module and methods lists, sorted alphabetically by their full names
     debug("Sorting classes and modules")
-    @classes = RDoc::TopLevel.all_classes.sort_by{|klass| klass.full_name}
-    @modules = RDoc::TopLevel.all_modules.sort_by{|mod| mod.full_name}
+    @classes = @store.all_classes.sort_by{|klass| klass.full_name}
+    @modules = @store.all_modules.sort_by{|mod| mod.full_name}
     @classes_and_modules = @classes.concat(@modules).sort_by(&:full_name)
     @methods = @classes_and_modules.sort_by(&:full_name).map{|mod| mod.enum_for(:each_method).sort_by{|m|m.pretty_name.tr(":#", "ab")}}.flatten
     # Thanks to Hanmac for the above sorting code
@@ -193,8 +195,15 @@ class RDoc::Generator::Papyrus
 
       debug "Creating method overview"
       table = [["Method name", "p."]]
-      formatter = table_formatter(nil) # We don’t use the resolver
-      @methods.each{|m| table << [m.full_name, Prawn::Table::Cell.make(@pdf, formatter.prawn_page_link(m.anchor, formatter.determine_page!(m)), inline_format: true)]}
+
+      @methods.each do |m|
+        page = RDoc::Markup::PrawnCrossReferencing.resolve_pdf_reference(m.anchor)
+        if page
+          table << [m.full_name, Prawn::Table::Cell.make(@pdf, RDoc::Markup::PrawnCrossReferencing.prawn_page_link(m.anchor, page.to_i), inline_format: true)]
+        else
+          table << [m.full_name, Prawn::Table::Cell.make(@pdf, "???")]
+        end
+      end
       @pdf.table(table, header: true) do |tbl|
         # Column width (to_s as we want to measure that width of the printed number)
         tbl.column(0).width = @pdf.bounds.width - @pdf.width_of(METHOD_OVERVIEW_MAX_PAGENUM.to_s)

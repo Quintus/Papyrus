@@ -262,7 +262,7 @@ class RDoc::Markup::ToPrawn < RDoc::Markup::Formatter
       @pdf.draw_text(label, at: [-@pdf.width_of(label) - 5, @pdf.cursor - @pdf.font.ascender]) # -5 ensures the label doesn’t touch the text
     when :NOTE, :LABEL then
       # Determine the height the label would render to
-      label_tokens = Prawn::Text::Formatted::Parser.to_array("<b><#{to_prawn(item.label)}</b>") # Labels are always bold, regardless of what the user sets
+      label_tokens = Prawn::Text::Formatted::Parser.to_array("<b><#{to_prawn(item.label.first)}</b>") # Labels are always bold, regardless of what the user sets
       tb = Prawn::Text::Formatted::Box.new(label_tokens,
                                            document: @pdf,
                                            width: @pdf.bounds.width - 10, # -5pt left/-5pt right so it doesn’t touch the left/right border
