@@ -1,5 +1,9 @@
 = Papyrus--a PDF Generator for RDoc (based on LaTeX)
 
+               ****************************************
+    THIS LIBRARY IS CURRENTLY UNMAINTAINED. USE AT YOUR OWN RISK.
+               ****************************************
+
 This library is a plugin for Ruby’s documentation generator
 RDoc[http://github.com/rdoc/rdoc]. It provides both a generator for
 outputting PDF (Portable document format) (the
